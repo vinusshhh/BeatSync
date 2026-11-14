@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_dark"
+    android:gravity="center">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center">
+
+        <!-- Logo Icon -->
+        <FrameLayout
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:background="@drawable/bg_card_highlight">
+
+            <ImageView
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_music_note"
+                android:tint="@color/accent_cyan"
+                android:contentDescription="BeatSync Logo" />
+        </FrameLayout>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="BEATSYNC"
+            android:textColor="@color/text_primary"
+            android:textSize="22sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.2"
+            android:layout_marginTop="20dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="MINIMAL AUDIO STREAMING ENGINE"
+            android:textColor="@color/text_secondary"
+            android:textSize="10sp"
+            android:letterSpacing="0.15"
+            android:layout_marginTop="6dp" />
+
+        <ProgressBar
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:indeterminateTint="@color/accent_cyan"
+            android:layout_marginTop="32dp" />
+    </LinearLayout>
+
+</RelativeLayout>

@@ -1,0 +1,192 @@
+1<?xml version="1.0" encoding="utf-8"?>
+2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+3    package="com.beatsync.app"
+4    android:versionCode="1"
+5    android:versionName="1.0.0" >
+6
+7    <uses-sdk
+7-->INJECTED
+8        android:minSdkVersion="24"
+8-->INJECTED
+9        android:targetSdkVersion="35" />
+9-->INJECTED
+10
+11    <uses-permission android:name="android.permission.INTERNET" />
+11-->C:\Users\VINUSH\Documents\Project\BeatSync\app\src\main\AndroidManifest.xml:5:5-67
+11-->C:\Users\VINUSH\Documents\Project\BeatSync\app\src\main\AndroidManifest.xml:5:22-64
+12    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+12-->C:\Users\VINUSH\Documents\Project\BeatSync\app\src\main\AndroidManifest.xml:6:5-79
+12-->C:\Users\VINUSH\Documents\Project\BeatSync\app\src\main\AndroidManifest.xml:6:22-76
+13    <uses-permission
+13-->C:\Users\VINUSH\Documents\Project\BeatSync\app\src\main\AndroidManifest.xml:7:5-8:38
+14        android:name="android.permission.READ_EXTERNAL_STORAGE"
+14-->C:\Users\VINUSH\Documents\Project\BeatSync\app\src\main\AndroidManifest.xml:7:22-77
+15        android:maxSdkVersion="32" />
+15-->C:\Users\VINUSH\Documents\Project\BeatSync\app\src\main\AndroidManifest.xml:8:9-35
+16    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+16-->C:\Users\VINUSH\Documents\Project\BeatSync\app\src\main\AndroidManifest.xml:9:5-75
+16-->C:\Users\VINUSH\Documents\Project\BeatSync\app\src\main\AndroidManifest.xml:9:22-72
+17    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+17-->C:\Users\VINUSH\Documents\Project\BeatSync\app\src\main\AndroidManifest.xml:10:5-76
+17-->C:\Users\VINUSH\Documents\Project\BeatSync\app\src\main\AndroidManifest.xml:10:22-73
+18
+19    <permission
+19-->[androidx.core:core:1.13.0] C:\Users\VINUSH\.gradle\caches\9.4.1\transforms\ceecd8dc30e5c82c7d9ea31dfe288088\transformed\core-1.13.0\AndroidManifest.xml:22:5-24:47
+20        android:name="com.beatsync.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+20-->[androidx.core:core:1.13.0] C:\Users\VINUSH\.gradle\caches\9.4.1\transforms\ceecd8dc30e5c82c7d9ea31dfe288088\transformed\core-1.13.0\AndroidManifest.xml:23:9-81
+21        android:protectionLevel="signature" />
+21-->[androidx.core:core:1.13.0] C:\Users\VINUSH\.gradle\caches\9.4.1\transforms\ceecd8dc30e5c82c7d9ea31dfe288088\transformed\core-1.13.0\AndroidManifest.xml:24:9-44
+22
+23    <uses-permission android:name="com.beatsync.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION" />
+23-->[androidx.core:core:1.13.0] C:\Users\VINUSH\.gradle\caches\9.4.1\transforms\ceecd8dc30e5c82c7d9ea31dfe288088\transformed\core-1.13.0\AndroidManifest.xml:26:5-97
+23-->[androidx.core:core:1.13.0] C:\Users\VINUSH\.gradle\caches\9.4.1\transforms\ceecd8dc30e5c82c7d9ea31dfe288088\transformed\core-1.13.0\AndroidManifest.xml:26:22-94
+24
+25    <application
+25-->C:\Users\VINUSH\Documents\Project\BeatSync\app\src\main\AndroidManifest.xml:12:5-56:19
+26        android:allowBackup="true"
+26-->C:\Users\VINUSH\Documents\Project\BeatSync\app\src\main\AndroidManifest.xml:13:9-35
+27        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
+27-->[androidx.core:core:1.13.0] C:\Users\VINUSH\.gradle\caches\9.4.1\transforms\ceecd8dc30e5c82c7d9ea31dfe288088\transformed\core-1.13.0\AndroidManifest.xml:28:18-86
+28        android:debuggable="true"
+29        android:extractNativeLibs="false"
+29-->INJECTED
+30        android:icon="@drawable/ic_music_note"
+30-->C:\Users\VINUSH\Documents\Project\BeatSync\app\src\main\AndroidManifest.xml:14:9-47
+31        android:label="@string/app_name"
+31-->C:\Users\VINUSH\Documents\Project\BeatSync\app\src\main\AndroidManifest.xml:15:9-41
+32        android:roundIcon="@drawable/ic_music_note"
+32-->C:\Users\VINUSH\Documents\Project\BeatSync\app\src\main\AndroidManifest.xml:16:9-52
+33        android:supportsRtl="true"
+33-->C:\Users\VINUSH\Documents\Project\BeatSync\app\src\main\AndroidManifest.xml:17:9-35
+34        android:theme="@style/Theme.BeatSync"
+34-->C:\Users\VINUSH\Documents\Project\BeatSync\app\src\main\AndroidManifest.xml:18:9-46
+35        android:usesCleartextTraffic="true" >
+35-->C:\Users\VINUSH\Documents\Project\BeatSync\app\src\main\AndroidManifest.xml:19:9-44
+36
+37        <!-- Splash Activity (Entry Point) -->
+38        <activity
+38-->C:\Users\VINUSH\Documents\Project\BeatSync\app\src\main\AndroidManifest.xml:22:9-30:20
+39            android:name="com.beatsync.app.ui.SplashActivity"
+39-->C:\Users\VINUSH\Documents\Project\BeatSync\app\src\main\AndroidManifest.xml:23:13-46
+40            android:exported="true"
+40-->C:\Users\VINUSH\Documents\Project\BeatSync\app\src\main\AndroidManifest.xml:24:13-36
+41            android:theme="@style/Theme.BeatSync" >
+41-->C:\Users\VINUSH\Documents\Project\BeatSync\app\src\main\AndroidManifest.xml:25:13-50
+42            <intent-filter>
+42-->C:\Users\VINUSH\Documents\Project\BeatSync\app\src\main\AndroidManifest.xml:26:13-29:29
+43                <action android:name="android.intent.action.MAIN" />
+43-->C:\Users\VINUSH\Documents\Project\BeatSync\app\src\main\AndroidManifest.xml:27:17-69
+43-->C:\Users\VINUSH\Documents\Project\BeatSync\app\src\main\AndroidManifest.xml:27:25-66
+44
+45                <category android:name="android.intent.category.LAUNCHER" />
+45-->C:\Users\VINUSH\Documents\Project\BeatSync\app\src\main\AndroidManifest.xml:28:17-77
+45-->C:\Users\VINUSH\Documents\Project\BeatSync\app\src\main\AndroidManifest.xml:28:27-74
+46            </intent-filter>
+47        </activity>
+48        <activity
+48-->C:\Users\VINUSH\Documents\Project\BeatSync\app\src\main\AndroidManifest.xml:32:9-35:58
+49            android:name="com.beatsync.app.ui.LoginActivity"
+49-->C:\Users\VINUSH\Documents\Project\BeatSync\app\src\main\AndroidManifest.xml:33:13-45
+50            android:exported="false"
+50-->C:\Users\VINUSH\Documents\Project\BeatSync\app\src\main\AndroidManifest.xml:34:13-37
+51            android:windowSoftInputMode="adjustResize" />
+51-->C:\Users\VINUSH\Documents\Project\BeatSync\app\src\main\AndroidManifest.xml:35:13-55
+52        <activity
+52-->C:\Users\VINUSH\Documents\Project\BeatSync\app\src\main\AndroidManifest.xml:37:9-40:58
+53            android:name="com.beatsync.app.ui.RegisterActivity"
+53-->C:\Users\VINUSH\Documents\Project\BeatSync\app\src\main\AndroidManifest.xml:38:13-48
+54            android:exported="false"
+54-->C:\Users\VINUSH\Documents\Project\BeatSync\app\src\main\AndroidManifest.xml:39:13-37
+55            android:windowSoftInputMode="adjustResize" />
+55-->C:\Users\VINUSH\Documents\Project\BeatSync\app\src\main\AndroidManifest.xml:40:13-55
+56        <activity
+56-->C:\Users\VINUSH\Documents\Project\BeatSync\app\src\main\AndroidManifest.xml:42:9-45:46
+57            android:name="com.beatsync.app.ui.MainActivity"
+57-->C:\Users\VINUSH\Documents\Project\BeatSync\app\src\main\AndroidManifest.xml:43:13-44
+58            android:exported="false"
+58-->C:\Users\VINUSH\Documents\Project\BeatSync\app\src\main\AndroidManifest.xml:44:13-37
+59            android:launchMode="singleTop" />
+59-->C:\Users\VINUSH\Documents\Project\BeatSync\app\src\main\AndroidManifest.xml:45:13-43
+60        <activity
+60-->C:\Users\VINUSH\Documents\Project\BeatSync\app\src\main\AndroidManifest.xml:47:9-50:53
+61            android:name="com.beatsync.app.ui.NowPlayingActivity"
+61-->C:\Users\VINUSH\Documents\Project\BeatSync\app\src\main\AndroidManifest.xml:48:13-50
+62            android:exported="false"
+62-->C:\Users\VINUSH\Documents\Project\BeatSync\app\src\main\AndroidManifest.xml:49:13-37
+63            android:theme="@style/Theme.BeatSync" />
+63-->C:\Users\VINUSH\Documents\Project\BeatSync\app\src\main\AndroidManifest.xml:50:13-50
+64        <activity
+64-->C:\Users\VINUSH\Documents\Project\BeatSync\app\src\main\AndroidManifest.xml:52:9-54:40
+65            android:name="com.beatsync.app.ui.PlaylistDetailActivity"
+65-->C:\Users\VINUSH\Documents\Project\BeatSync\app\src\main\AndroidManifest.xml:53:13-54
+66            android:exported="false" />
+66-->C:\Users\VINUSH\Documents\Project\BeatSync\app\src\main\AndroidManifest.xml:54:13-37
+67
+68        <provider
+68-->[androidx.emoji2:emoji2:1.3.0] C:\Users\VINUSH\.gradle\caches\9.4.1\transforms\6f4cd30ccd388c8fc51b2dfd6663da60\transformed\emoji2-1.3.0\AndroidManifest.xml:24:9-32:20
+69            android:name="androidx.startup.InitializationProvider"
+69-->[androidx.emoji2:emoji2:1.3.0] C:\Users\VINUSH\.gradle\caches\9.4.1\transforms\6f4cd30ccd388c8fc51b2dfd6663da60\transformed\emoji2-1.3.0\AndroidManifest.xml:25:13-67
+70            android:authorities="com.beatsync.app.androidx-startup"
+70-->[androidx.emoji2:emoji2:1.3.0] C:\Users\VINUSH\.gradle\caches\9.4.1\transforms\6f4cd30ccd388c8fc51b2dfd6663da60\transformed\emoji2-1.3.0\AndroidManifest.xml:26:13-68
+71            android:exported="false" >
+71-->[androidx.emoji2:emoji2:1.3.0] C:\Users\VINUSH\.gradle\caches\9.4.1\transforms\6f4cd30ccd388c8fc51b2dfd6663da60\transformed\emoji2-1.3.0\AndroidManifest.xml:27:13-37
+72            <meta-data
+72-->[androidx.emoji2:emoji2:1.3.0] C:\Users\VINUSH\.gradle\caches\9.4.1\transforms\6f4cd30ccd388c8fc51b2dfd6663da60\transformed\emoji2-1.3.0\AndroidManifest.xml:29:13-31:52
+73                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+73-->[androidx.emoji2:emoji2:1.3.0] C:\Users\VINUSH\.gradle\caches\9.4.1\transforms\6f4cd30ccd388c8fc51b2dfd6663da60\transformed\emoji2-1.3.0\AndroidManifest.xml:30:17-75
+74                android:value="androidx.startup" />
+74-->[androidx.emoji2:emoji2:1.3.0] C:\Users\VINUSH\.gradle\caches\9.4.1\transforms\6f4cd30ccd388c8fc51b2dfd6663da60\transformed\emoji2-1.3.0\AndroidManifest.xml:31:17-49
+75            <meta-data
+75-->[androidx.lifecycle:lifecycle-process:2.6.2] C:\Users\VINUSH\.gradle\caches\9.4.1\transforms\81d5c5736508fdca85ee7ed9b48fa23b\transformed\lifecycle-process-2.6.2\AndroidManifest.xml:29:13-31:52
+76                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+76-->[androidx.lifecycle:lifecycle-process:2.6.2] C:\Users\VINUSH\.gradle\caches\9.4.1\transforms\81d5c5736508fdca85ee7ed9b48fa23b\transformed\lifecycle-process-2.6.2\AndroidManifest.xml:30:17-78
+77                android:value="androidx.startup" />
+77-->[androidx.lifecycle:lifecycle-process:2.6.2] C:\Users\VINUSH\.gradle\caches\9.4.1\transforms\81d5c5736508fdca85ee7ed9b48fa23b\transformed\lifecycle-process-2.6.2\AndroidManifest.xml:31:17-49
+78            <meta-data
+78-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\VINUSH\.gradle\caches\9.4.1\transforms\4918bdcfa5e244065342ed86c5998d48\transformed\profileinstaller-1.4.0\AndroidManifest.xml:29:13-31:52
+79                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+79-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\VINUSH\.gradle\caches\9.4.1\transforms\4918bdcfa5e244065342ed86c5998d48\transformed\profileinstaller-1.4.0\AndroidManifest.xml:30:17-85
+80                android:value="androidx.startup" />
+80-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\VINUSH\.gradle\caches\9.4.1\transforms\4918bdcfa5e244065342ed86c5998d48\transformed\profileinstaller-1.4.0\AndroidManifest.xml:31:17-49
+81        </provider>
+82
+83        <receiver
+83-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\VINUSH\.gradle\caches\9.4.1\transforms\4918bdcfa5e244065342ed86c5998d48\transformed\profileinstaller-1.4.0\AndroidManifest.xml:34:9-52:20
+84            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+84-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\VINUSH\.gradle\caches\9.4.1\transforms\4918bdcfa5e244065342ed86c5998d48\transformed\profileinstaller-1.4.0\AndroidManifest.xml:35:13-76
+85            android:directBootAware="false"
+85-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\VINUSH\.gradle\caches\9.4.1\transforms\4918bdcfa5e244065342ed86c5998d48\transformed\profileinstaller-1.4.0\AndroidManifest.xml:36:13-44
+86            android:enabled="true"
+86-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\VINUSH\.gradle\caches\9.4.1\transforms\4918bdcfa5e244065342ed86c5998d48\transformed\profileinstaller-1.4.0\AndroidManifest.xml:37:13-35
+87            android:exported="true"
+87-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\VINUSH\.gradle\caches\9.4.1\transforms\4918bdcfa5e244065342ed86c5998d48\transformed\profileinstaller-1.4.0\AndroidManifest.xml:38:13-36
+88            android:permission="android.permission.DUMP" >
+88-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\VINUSH\.gradle\caches\9.4.1\transforms\4918bdcfa5e244065342ed86c5998d48\transformed\profileinstaller-1.4.0\AndroidManifest.xml:39:13-57
+89            <intent-filter>
+89-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\VINUSH\.gradle\caches\9.4.1\transforms\4918bdcfa5e244065342ed86c5998d48\transformed\profileinstaller-1.4.0\AndroidManifest.xml:40:13-42:29
+90                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+90-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\VINUSH\.gradle\caches\9.4.1\transforms\4918bdcfa5e244065342ed86c5998d48\transformed\profileinstaller-1.4.0\AndroidManifest.xml:41:17-91
+90-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\VINUSH\.gradle\caches\9.4.1\transforms\4918bdcfa5e244065342ed86c5998d48\transformed\profileinstaller-1.4.0\AndroidManifest.xml:41:25-88
+91            </intent-filter>
+92            <intent-filter>
+92-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\VINUSH\.gradle\caches\9.4.1\transforms\4918bdcfa5e244065342ed86c5998d48\transformed\profileinstaller-1.4.0\AndroidManifest.xml:43:13-45:29
+93                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+93-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\VINUSH\.gradle\caches\9.4.1\transforms\4918bdcfa5e244065342ed86c5998d48\transformed\profileinstaller-1.4.0\AndroidManifest.xml:44:17-85
+93-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\VINUSH\.gradle\caches\9.4.1\transforms\4918bdcfa5e244065342ed86c5998d48\transformed\profileinstaller-1.4.0\AndroidManifest.xml:44:25-82
+94            </intent-filter>
+95            <intent-filter>
+95-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\VINUSH\.gradle\caches\9.4.1\transforms\4918bdcfa5e244065342ed86c5998d48\transformed\profileinstaller-1.4.0\AndroidManifest.xml:46:13-48:29
+96                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+96-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\VINUSH\.gradle\caches\9.4.1\transforms\4918bdcfa5e244065342ed86c5998d48\transformed\profileinstaller-1.4.0\AndroidManifest.xml:47:17-88
+96-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\VINUSH\.gradle\caches\9.4.1\transforms\4918bdcfa5e244065342ed86c5998d48\transformed\profileinstaller-1.4.0\AndroidManifest.xml:47:25-85
+97            </intent-filter>
+98            <intent-filter>
+98-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\VINUSH\.gradle\caches\9.4.1\transforms\4918bdcfa5e244065342ed86c5998d48\transformed\profileinstaller-1.4.0\AndroidManifest.xml:49:13-51:29
+99                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+99-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\VINUSH\.gradle\caches\9.4.1\transforms\4918bdcfa5e244065342ed86c5998d48\transformed\profileinstaller-1.4.0\AndroidManifest.xml:50:17-95
+99-->[androidx.profileinstaller:profileinstaller:1.4.0] C:\Users\VINUSH\.gradle\caches\9.4.1\transforms\4918bdcfa5e244065342ed86c5998d48\transformed\profileinstaller-1.4.0\AndroidManifest.xml:50:25-92
+100            </intent-filter>
+101        </receiver>
+102    </application>
+103
+104</manifest>

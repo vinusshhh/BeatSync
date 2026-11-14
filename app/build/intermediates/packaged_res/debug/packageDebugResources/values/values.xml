@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <color name="accent_amber">#F59E0B</color>
+    <color name="accent_blue">#0070F3</color>
+    <color name="accent_cyan">#00E5FF</color>
+    <color name="accent_emerald">#10B981</color>
+    <color name="accent_rose">#F43F5E</color>
+    <color name="badge_private_bg">#201A12</color>
+    <color name="badge_private_border">#543D16</color>
+    <color name="badge_private_text">#FBBF24</color>
+    <color name="badge_public_bg">#101C1A</color>
+    <color name="badge_public_border">#1D4D3E</color>
+    <color name="badge_public_text">#34D399</color>
+    <color name="bg_card">#12151C</color>
+    <color name="bg_card_elevated">#171B24</color>
+    <color name="bg_dark">#0A0C10</color>
+    <color name="bg_input">#151922</color>
+    <color name="border_active">#2E3748</color>
+    <color name="border_subtle">#1F2430</color>
+    <color name="divider">#1A1F2B</color>
+    <color name="mini_player_bg">#131720</color>
+    <color name="text_inverse">#0A0C10</color>
+    <color name="text_primary">#F4F5F7</color>
+    <color name="text_secondary">#8E96A4</color>
+    <color name="text_tertiary">#5A6272</color>
+    <string name="app_name">BeatSync</string>
+    <string name="email_hint">Email address</string>
+    <string name="have_account">Already have an account? Sign In</string>
+    <string name="login_button">Sign In</string>
+    <string name="login_subtitle">Stream &amp; publish your sound securely.</string>
+    <string name="login_title">Sign In</string>
+    <string name="name_hint">Full name / Artist name</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_library">Library</string>
+    <string name="nav_search">Search</string>
+    <string name="nav_upload">Upload</string>
+    <string name="no_account">Don\'t have an account? Sign Up</string>
+    <string name="password_hint">Password</string>
+    <string name="register_button">Create Account</string>
+    <string name="register_subtitle">Join the minimal audio cloud.</string>
+    <string name="register_title">Create Account</string>
+    <string name="track_artist_hint">Artist / Band Name</string>
+    <string name="track_title_hint">Track Title</string>
+    <string name="upload_subtitle">Share to the global stage or store securely in your private vault.</string>
+    <string name="upload_title">Publish Track</string>
+    <string name="visibility_private_desc">Locked exclusively to your account. Invisible to all other users.</string>
+    <string name="visibility_private_title">Private Track</string>
+    <string name="visibility_public_desc">Anyone on BeatSync can discover, stream, and playlist this audio.</string>
+    <string name="visibility_public_title">Public Track</string>
+    <style name="Theme.BeatSync" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimary">@color/accent_cyan</item>
+        <item name="colorOnPrimary">@color/text_inverse</item>
+        <item name="colorPrimaryContainer">@color/bg_card_elevated</item>
+        <item name="colorOnPrimaryContainer">@color/accent_cyan</item>
+        <item name="colorSecondary">@color/accent_emerald</item>
+        <item name="colorOnSecondary">@color/text_inverse</item>
+        
+        <item name="android:windowBackground">@color/bg_dark</item>
+        <item name="colorSurface">@color/bg_card</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="colorSurfaceVariant">@color/bg_input</item>
+        <item name="colorOnSurfaceVariant">@color/text_secondary</item>
+        
+        <item name="android:statusBarColor">@color/bg_dark</item>
+        <item name="android:navigationBarColor">@color/bg_dark</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
+    </style>
+</resources>

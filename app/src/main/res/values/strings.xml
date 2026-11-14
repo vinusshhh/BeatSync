@@ -1,0 +1,29 @@
+<resources>
+    <string name="app_name">BeatSync</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_search">Search</string>
+    <string name="nav_upload">Upload</string>
+    <string name="nav_library">Library</string>
+    
+    <string name="login_title">Sign In</string>
+    <string name="login_subtitle">Stream &amp; publish your sound securely.</string>
+    <string name="register_title">Create Account</string>
+    <string name="register_subtitle">Join the minimal audio cloud.</string>
+    
+    <string name="email_hint">Email address</string>
+    <string name="password_hint">Password</string>
+    <string name="name_hint">Full name / Artist name</string>
+    <string name="login_button">Sign In</string>
+    <string name="register_button">Create Account</string>
+    <string name="no_account">Don\'t have an account? Sign Up</string>
+    <string name="have_account">Already have an account? Sign In</string>
+    
+    <string name="upload_title">Publish Track</string>
+    <string name="upload_subtitle">Share to the global stage or store securely in your private vault.</string>
+    <string name="track_title_hint">Track Title</string>
+    <string name="track_artist_hint">Artist / Band Name</string>
+    <string name="visibility_public_title">Public Track</string>
+    <string name="visibility_public_desc">Anyone on BeatSync can discover, stream, and playlist this audio.</string>
+    <string name="visibility_private_title">Private Track</string>
+    <string name="visibility_private_desc">Locked exclusively to your account. Invisible to all other users.</string>
+</resources>

@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_dark"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp"
+        android:paddingBottom="90dp">
+
+        <!-- Header -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="BEATSYNC // PUBLISH"
+            android:textColor="@color/accent_cyan"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.15" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/upload_title"
+            android:textColor="@color/text_primary"
+            android:textSize="26sp"
+            android:textStyle="bold"
+            android:layout_marginTop="4dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/upload_subtitle"
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp"
+            android:layout_marginTop="6dp" />
+
+        <!-- Form Card -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginTop="24dp">
+
+            <!-- Track Title -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="TRACK TITLE *"
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.08"
+                android:layout_marginBottom="8dp" />
+
+            <EditText
+                android:id="@+id/etTrackTitle"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:background="@drawable/bg_edit_text"
+                android:hint="@string/track_title_hint"
+                android:textColorHint="@color/text_tertiary"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:inputType="textCapWords" />
+
+            <!-- Artist Name -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="ARTIST *"
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.08"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="8dp" />
+
+            <EditText
+                android:id="@+id/etArtistName"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:background="@drawable/bg_edit_text"
+                android:hint="@string/track_artist_hint"
+                android:textColorHint="@color/text_tertiary"
+                android:textColor="@color/text_primary"
+                android:textSize="14sp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:inputType="textPersonName" />
+
+            <!-- Privacy Mode Selector Card -->
+            <androidx.cardview.widget.CardView
+                android:id="@+id/cardPrivacy"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                app:cardCornerRadius="14dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="@color/bg_card_elevated">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_alignParentStart="true"
+                            android:layout_toStartOf="@+id/switchPrivacy">
+
+                            <ImageView
+                                android:id="@+id/ivPrivacyIcon"
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:src="@drawable/ic_globe"
+                                android:contentDescription="Privacy" />
+
+                            <TextView
+                                android:id="@+id/tvPrivacyModeTitle"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Public Release"
+                                android:textColor="@color/text_primary"
+                                android:textSize="15sp"
+                                android:textStyle="bold"
+                                android:layout_marginStart="10dp" />
+                        </LinearLayout>
+
+                        <!-- Switch: Checked = Public, Unchecked = Private -->
+                        <com.google.android.material.switchmaterial.SwitchMaterial
+                            android:id="@+id/switchPrivacy"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentEnd="true"
+                            android:checked="true"
+                            app:thumbTint="@color/accent_cyan"
+                            app:trackTint="@color/border_active" />
+                    </RelativeLayout>
+
+                    <TextView
+                        android:id="@+id/tvPrivacyModeDesc"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/visibility_public_desc"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp"
+                        android:layout_marginTop="8dp" />
+
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Audio File Picker -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="AUDIO FILE (.MP3, .WAV, .M4A) *"
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.08"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:id="@+id/btnPickAudio"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:background="@drawable/bg_card_minimal"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:clickable="true"
+                android:focusable="true">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_music_note"
+                    android:tint="@color/accent_cyan"
+                    android:contentDescription="Select Audio" />
+
+                <TextView
+                    android:id="@+id/tvAudioFileName"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Select Audio File from Device"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp"
+                    android:singleLine="true"
+                    android:ellipsize="middle"
+                    android:layout_marginStart="14dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="BROWSE"
+                    android:textColor="@color/accent_cyan"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.08" />
+            </LinearLayout>
+
+            <!-- Optional Cover Art Picker -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="COVER ART (OPTIONAL)"
+                android:textColor="@color/text_secondary"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.08"
+                android:layout_marginTop="18dp"
+                android:layout_marginBottom="8dp" />
+
+            <LinearLayout
+                android:id="@+id/btnPickCover"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:background="@drawable/bg_card_minimal"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:clickable="true"
+                android:focusable="true">
+
+                <ImageView
+                    android:id="@+id/ivCoverPreview"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/ic_library"
+                    android:tint="@color/text_secondary"
+                    android:contentDescription="Cover Preview" />
+
+                <TextView
+                    android:id="@+id/tvCoverFileName"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Select Cover Artwork (JPG, PNG)"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="13sp"
+                    android:singleLine="true"
+                    android:ellipsize="middle"
+                    android:layout_marginStart="14dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="UPLOAD"
+                    android:textColor="@color/text_secondary"
+                    android:textSize="11sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.08" />
+            </LinearLayout>
+
+            <!-- Status / Error message -->
+            <TextView
+                android:id="@+id/tvStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textSize="13sp"
+                android:textColor="@color/accent_rose"
+                android:layout_marginTop="14dp"
+                android:visibility="gone" />
+
+            <!-- Submit Button -->
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btnSubmitUpload"
+                android:layout_width="match_parent"
+                android:layout_height="52dp"
+                android:text="Publish Track to BeatSync"
+                android:textColor="@color/text_inverse"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.05"
+                android:background="@drawable/bg_button_primary"
+                android:layout_marginTop="24dp" />
+
+            <!-- Upload Progress -->
+            <ProgressBar
+                android:id="@+id/uploadProgress"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_gravity="center"
+                android:indeterminateTint="@color/accent_cyan"
+                android:layout_marginTop="16dp"
+                android:visibility="gone" />
+
+        </LinearLayout>
+    </LinearLayout>
+
+</ScrollView>

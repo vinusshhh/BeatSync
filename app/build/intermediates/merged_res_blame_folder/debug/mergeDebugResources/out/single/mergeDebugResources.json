@@ -1,0 +1,182 @@
+[
+    {
+        "merged": "com.beatsync.app-debug-33:/layout_activity_playlist_detail.xml.flat",
+        "source": "com.beatsync.app-main-35:/layout/activity_playlist_detail.xml"
+    },
+    {
+        "merged": "com.beatsync.app-debug-33:/drawable_ic_home.xml.flat",
+        "source": "com.beatsync.app-main-35:/drawable/ic_home.xml"
+    },
+    {
+        "merged": "com.beatsync.app-debug-33:/layout_item_track.xml.flat",
+        "source": "com.beatsync.app-main-35:/layout/item_track.xml"
+    },
+    {
+        "merged": "com.beatsync.app-debug-33:/drawable_bg_button_secondary.xml.flat",
+        "source": "com.beatsync.app-main-35:/drawable/bg_button_secondary.xml"
+    },
+    {
+        "merged": "com.beatsync.app-debug-33:/layout_activity_register.xml.flat",
+        "source": "com.beatsync.app-main-35:/layout/activity_register.xml"
+    },
+    {
+        "merged": "com.beatsync.app-debug-33:/drawable_ic_settings.xml.flat",
+        "source": "com.beatsync.app-main-35:/drawable/ic_settings.xml"
+    },
+    {
+        "merged": "com.beatsync.app-debug-33:/drawable_ic_more_vert.xml.flat",
+        "source": "com.beatsync.app-main-35:/drawable/ic_more_vert.xml"
+    },
+    {
+        "merged": "com.beatsync.app-debug-33:/drawable_bg_card_highlight.xml.flat",
+        "source": "com.beatsync.app-main-35:/drawable/bg_card_highlight.xml"
+    },
+    {
+        "merged": "com.beatsync.app-debug-33:/layout_activity_login.xml.flat",
+        "source": "com.beatsync.app-main-35:/layout/activity_login.xml"
+    },
+    {
+        "merged": "com.beatsync.app-debug-33:/drawable_ic_add.xml.flat",
+        "source": "com.beatsync.app-main-35:/drawable/ic_add.xml"
+    },
+    {
+        "merged": "com.beatsync.app-debug-33:/drawable_bg_card_minimal.xml.flat",
+        "source": "com.beatsync.app-main-35:/drawable/bg_card_minimal.xml"
+    },
+    {
+        "merged": "com.beatsync.app-debug-33:/layout_dialog_server_settings.xml.flat",
+        "source": "com.beatsync.app-main-35:/layout/dialog_server_settings.xml"
+    },
+    {
+        "merged": "com.beatsync.app-debug-33:/layout_fragment_upload.xml.flat",
+        "source": "com.beatsync.app-main-35:/layout/fragment_upload.xml"
+    },
+    {
+        "merged": "com.beatsync.app-debug-33:/drawable_bg_edit_text.xml.flat",
+        "source": "com.beatsync.app-main-35:/drawable/bg_edit_text.xml"
+    },
+    {
+        "merged": "com.beatsync.app-debug-33:/drawable_ic_logout.xml.flat",
+        "source": "com.beatsync.app-main-35:/drawable/ic_logout.xml"
+    },
+    {
+        "merged": "com.beatsync.app-debug-33:/drawable_bg_mini_player.xml.flat",
+        "source": "com.beatsync.app-main-35:/drawable/bg_mini_player.xml"
+    },
+    {
+        "merged": "com.beatsync.app-debug-33:/drawable_bg_badge_public.xml.flat",
+        "source": "com.beatsync.app-main-35:/drawable/bg_badge_public.xml"
+    },
+    {
+        "merged": "com.beatsync.app-debug-33:/drawable_ic_library.xml.flat",
+        "source": "com.beatsync.app-main-35:/drawable/ic_library.xml"
+    },
+    {
+        "merged": "com.beatsync.app-debug-33:/drawable_ic_heart.xml.flat",
+        "source": "com.beatsync.app-main-35:/drawable/ic_heart.xml"
+    },
+    {
+        "merged": "com.beatsync.app-debug-33:/layout_fragment_home.xml.flat",
+        "source": "com.beatsync.app-main-35:/layout/fragment_home.xml"
+    },
+    {
+        "merged": "com.beatsync.app-debug-33:/layout_dialog_add_to_playlist.xml.flat",
+        "source": "com.beatsync.app-main-35:/layout/dialog_add_to_playlist.xml"
+    },
+    {
+        "merged": "com.beatsync.app-debug-33:/drawable_ic_shuffle.xml.flat",
+        "source": "com.beatsync.app-main-35:/drawable/ic_shuffle.xml"
+    },
+    {
+        "merged": "com.beatsync.app-debug-33:/layout_fragment_search.xml.flat",
+        "source": "com.beatsync.app-main-35:/layout/fragment_search.xml"
+    },
+    {
+        "merged": "com.beatsync.app-debug-33:/drawable_ic_repeat.xml.flat",
+        "source": "com.beatsync.app-main-35:/drawable/ic_repeat.xml"
+    },
+    {
+        "merged": "com.beatsync.app-debug-33:/color_selector_nav_tint.xml.flat",
+        "source": "com.beatsync.app-main-35:/color/selector_nav_tint.xml"
+    },
+    {
+        "merged": "com.beatsync.app-debug-33:/drawable_ic_globe.xml.flat",
+        "source": "com.beatsync.app-main-35:/drawable/ic_globe.xml"
+    },
+    {
+        "merged": "com.beatsync.app-debug-33:/drawable_ic_skip_prev.xml.flat",
+        "source": "com.beatsync.app-main-35:/drawable/ic_skip_prev.xml"
+    },
+    {
+        "merged": "com.beatsync.app-debug-33:/drawable_ic_upload.xml.flat",
+        "source": "com.beatsync.app-main-35:/drawable/ic_upload.xml"
+    },
+    {
+        "merged": "com.beatsync.app-debug-33:/layout_fragment_library.xml.flat",
+        "source": "com.beatsync.app-main-35:/layout/fragment_library.xml"
+    },
+    {
+        "merged": "com.beatsync.app-debug-33:/drawable_bg_badge_private.xml.flat",
+        "source": "com.beatsync.app-main-35:/drawable/bg_badge_private.xml"
+    },
+    {
+        "merged": "com.beatsync.app-debug-33:/drawable_ic_search.xml.flat",
+        "source": "com.beatsync.app-main-35:/drawable/ic_search.xml"
+    },
+    {
+        "merged": "com.beatsync.app-debug-33:/drawable_ic_music_note.xml.flat",
+        "source": "com.beatsync.app-main-35:/drawable/ic_music_note.xml"
+    },
+    {
+        "merged": "com.beatsync.app-debug-33:/drawable_ic_pause.xml.flat",
+        "source": "com.beatsync.app-main-35:/drawable/ic_pause.xml"
+    },
+    {
+        "merged": "com.beatsync.app-debug-33:/drawable_ic_play.xml.flat",
+        "source": "com.beatsync.app-main-35:/drawable/ic_play.xml"
+    },
+    {
+        "merged": "com.beatsync.app-debug-33:/drawable_ic_lock.xml.flat",
+        "source": "com.beatsync.app-main-35:/drawable/ic_lock.xml"
+    },
+    {
+        "merged": "com.beatsync.app-debug-33:/layout_activity_splash.xml.flat",
+        "source": "com.beatsync.app-main-35:/layout/activity_splash.xml"
+    },
+    {
+        "merged": "com.beatsync.app-debug-33:/drawable_ic_chevron_down.xml.flat",
+        "source": "com.beatsync.app-main-35:/drawable/ic_chevron_down.xml"
+    },
+    {
+        "merged": "com.beatsync.app-debug-33:/drawable_ic_skip_next.xml.flat",
+        "source": "com.beatsync.app-main-35:/drawable/ic_skip_next.xml"
+    },
+    {
+        "merged": "com.beatsync.app-debug-33:/drawable_bg_button_primary.xml.flat",
+        "source": "com.beatsync.app-main-35:/drawable/bg_button_primary.xml"
+    },
+    {
+        "merged": "com.beatsync.app-debug-33:/layout_item_playlist.xml.flat",
+        "source": "com.beatsync.app-main-35:/layout/item_playlist.xml"
+    },
+    {
+        "merged": "com.beatsync.app-debug-33:/layout_activity_now_playing.xml.flat",
+        "source": "com.beatsync.app-main-35:/layout/activity_now_playing.xml"
+    },
+    {
+        "merged": "com.beatsync.app-debug-33:/menu_bottom_nav_menu.xml.flat",
+        "source": "com.beatsync.app-main-35:/menu/bottom_nav_menu.xml"
+    },
+    {
+        "merged": "com.beatsync.app-debug-33:/layout_dialog_create_playlist.xml.flat",
+        "source": "com.beatsync.app-main-35:/layout/dialog_create_playlist.xml"
+    },
+    {
+        "merged": "com.beatsync.app-debug-33:/layout_activity_main.xml.flat",
+        "source": "com.beatsync.app-main-35:/layout/activity_main.xml"
+    },
+    {
+        "merged": "com.beatsync.app-debug-33:/drawable_ic_heart_filled.xml.flat",
+        "source": "com.beatsync.app-main-35:/drawable/ic_heart_filled.xml"
+    }
+]
