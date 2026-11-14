@@ -14,7 +14,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingBottom="80dp">
+            android:paddingBottom="100dp">
 
             <!-- Top Header -->
             <LinearLayout
@@ -24,8 +24,8 @@
                 android:gravity="center_vertical"
                 android:paddingStart="20dp"
                 android:paddingEnd="20dp"
-                android:paddingTop="24dp"
-                android:paddingBottom="16dp">
+                android:paddingTop="20dp"
+                android:paddingBottom="12dp">
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -37,10 +37,10 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="BEATSYNC // STREAM"
-                        android:textColor="@color/accent_cyan"
-                        android:textSize="11sp"
+                        android:textColor="@color/text_secondary"
+                        android:textSize="10sp"
                         android:textStyle="bold"
-                        android:letterSpacing="0.15" />
+                        android:letterSpacing="0.2" />
 
                     <TextView
                         android:id="@+id/tvGreeting"
@@ -50,18 +50,90 @@
                         android:textColor="@color/text_primary"
                         android:textSize="22sp"
                         android:textStyle="bold"
-                        android:layout_marginTop="4dp" />
+                        android:layout_marginTop="2dp" />
                 </LinearLayout>
 
                 <ImageView
                     android:id="@+id/btnQuickProfile"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:padding="8dp"
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:padding="9dp"
                     android:src="@drawable/ic_settings"
-                    android:tint="@color/text_secondary"
-                    android:background="@drawable/bg_card_minimal"
+                    android:tint="@color/text_primary"
+                    android:background="@drawable/bg_quick_action"
                     android:contentDescription="Settings" />
+            </LinearLayout>
+
+            <!-- Quick Action Shortcuts Bar -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:paddingTop="4dp"
+                android:paddingBottom="16dp">
+
+                <!-- Upload Shortcut Button -->
+                <LinearLayout
+                    android:id="@+id/btnQuickUpload"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:background="@drawable/bg_button_primary"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <ImageView
+                        android:layout_width="18dp"
+                        android:layout_height="18dp"
+                        android:src="@drawable/ic_upload"
+                        android:tint="@color/text_inverse"
+                        android:contentDescription="Upload" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Upload Music"
+                        android:textColor="@color/text_inverse"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.04"
+                        android:layout_marginStart="8dp" />
+                </LinearLayout>
+
+                <!-- Search Shortcut Button -->
+                <LinearLayout
+                    android:id="@+id/btnQuickSearch"
+                    android:layout_width="0dp"
+                    android:layout_height="44dp"
+                    android:layout_weight="1"
+                    android:orientation="horizontal"
+                    android:gravity="center"
+                    android:background="@drawable/bg_quick_action"
+                    android:layout_marginStart="10dp"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:src="@drawable/ic_search"
+                        android:tint="@color/text_primary"
+                        android:contentDescription="Search" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Search"
+                        android:textColor="@color/text_primary"
+                        android:textSize="13sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.04"
+                        android:layout_marginStart="8dp" />
+                </LinearLayout>
             </LinearLayout>
 
             <!-- Featured Minimal Card -->
@@ -71,9 +143,9 @@
                 android:layout_height="140dp"
                 android:layout_marginStart="20dp"
                 android:layout_marginEnd="20dp"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="2dp"
                 app:cardCornerRadius="16dp"
-                app:cardElevation="4dp"
+                app:cardElevation="3dp"
                 app:cardBackgroundColor="@color/bg_card_elevated"
                 android:clickable="true"
                 android:focusable="true">
@@ -88,10 +160,10 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="FEATURED SOUNDSCAPE"
-                        android:textColor="@color/accent_cyan"
+                        android:textColor="@color/text_secondary"
                         android:textSize="10sp"
                         android:textStyle="bold"
-                        android:letterSpacing="0.1" />
+                        android:letterSpacing="0.12" />
 
                     <TextView
                         android:id="@+id/tvFeaturedTitle"
@@ -114,7 +186,7 @@
                         android:textSize="13sp"
                         android:layout_marginTop="4dp" />
 
-                    <!-- Play Pill Button -->
+                    <!-- Play Pill Button: Pure Stark White -->
                     <LinearLayout
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -123,14 +195,14 @@
                         android:orientation="horizontal"
                         android:gravity="center"
                         android:background="@drawable/bg_button_primary"
-                        android:paddingStart="14dp"
-                        android:paddingEnd="14dp"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
                         android:paddingTop="8dp"
                         android:paddingBottom="8dp">
 
                         <ImageView
-                            android:layout_width="16dp"
-                            android:layout_height="16dp"
+                            android:layout_width="14dp"
+                            android:layout_height="14dp"
                             android:src="@drawable/ic_play"
                             android:tint="@color/text_inverse"
                             android:contentDescription="Play" />
@@ -152,7 +224,7 @@
             <RelativeLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="28dp"
+                android:layout_marginTop="24dp"
                 android:paddingStart="20dp"
                 android:paddingEnd="20dp">
 
@@ -160,7 +232,7 @@
                     android:id="@+id/tvSectionHeader"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Public Streams"
+                    android:text="Public Catalog"
                     android:textColor="@color/text_primary"
                     android:textSize="18sp"
                     android:textStyle="bold" />
@@ -181,7 +253,7 @@
                 android:id="@+id/progressBar"
                 android:layout_width="32dp"
                 android:layout_height="32dp"
-                android:indeterminateTint="@color/accent_cyan"
+                android:indeterminateTint="@color/text_primary"
                 android:layout_gravity="center"
                 android:layout_marginTop="32dp"
                 android:visibility="gone" />

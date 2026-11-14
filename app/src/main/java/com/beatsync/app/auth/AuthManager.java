@@ -11,8 +11,8 @@ public class AuthManager {
     private static final String KEY_USER = "current_user";
     private static final String KEY_BASE_URL = "base_url";
 
-    // Default for Android Emulator to connect to host machine, or live cloud endpoint
-    public static final String DEFAULT_BASE_URL = "http://10.0.2.2:8000";
+    // Default live cloud endpoint
+    public static final String DEFAULT_BASE_URL = "https://beatsync-91vv.onrender.com";
 
     private static AuthManager instance;
     private final SharedPreferences prefs;
@@ -63,7 +63,12 @@ public class AuthManager {
     }
 
     public String getBaseUrl() {
-        return prefs.getString(KEY_BASE_URL, DEFAULT_BASE_URL);
+        String url = prefs.getString(KEY_BASE_URL, DEFAULT_BASE_URL);
+        if (url == null || url.contains("10.0.2.2") || url.contains("localhost")) {
+            url = DEFAULT_BASE_URL;
+            setBaseUrl(url);
+        }
+        return url;
     }
 
     public void setBaseUrl(String url) {
