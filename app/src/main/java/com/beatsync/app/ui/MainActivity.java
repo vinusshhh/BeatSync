@@ -17,6 +17,7 @@ public class MainActivity extends AppCompatActivity implements MusicPlayerManage
     private ActivityMainBinding binding;
     private final HomeFragment homeFragment = new HomeFragment();
     private final SearchFragment searchFragment = new SearchFragment();
+    private final PlaylistsFragment playlistsFragment = new PlaylistsFragment();
     private final UploadFragment uploadFragment = new UploadFragment();
     private final LibraryFragment libraryFragment = new LibraryFragment();
     private Fragment activeFragment = homeFragment;
@@ -29,8 +30,9 @@ public class MainActivity extends AppCompatActivity implements MusicPlayerManage
 
         // Setup fragments in container
         getSupportFragmentManager().beginTransaction()
-                .add(R.id.fragmentContainer, libraryFragment, "4").hide(libraryFragment)
-                .add(R.id.fragmentContainer, uploadFragment, "3").hide(uploadFragment)
+                .add(R.id.fragmentContainer, libraryFragment, "5").hide(libraryFragment)
+                .add(R.id.fragmentContainer, uploadFragment, "4").hide(uploadFragment)
+                .add(R.id.fragmentContainer, playlistsFragment, "3").hide(playlistsFragment)
                 .add(R.id.fragmentContainer, searchFragment, "2").hide(searchFragment)
                 .add(R.id.fragmentContainer, homeFragment, "1")
                 .commit();
@@ -42,6 +44,9 @@ public class MainActivity extends AppCompatActivity implements MusicPlayerManage
                 return true;
             } else if (itemId == R.id.nav_search) {
                 switchFragment(searchFragment);
+                return true;
+            } else if (itemId == R.id.nav_playlists) {
+                switchFragment(playlistsFragment);
                 return true;
             } else if (itemId == R.id.nav_upload) {
                 switchFragment(uploadFragment);

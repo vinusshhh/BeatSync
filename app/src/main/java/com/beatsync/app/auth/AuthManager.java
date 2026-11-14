@@ -9,9 +9,7 @@ public class AuthManager {
     private static final String PREF_NAME = "beatsync_prefs";
     private static final String KEY_TOKEN = "jwt_token";
     private static final String KEY_USER = "current_user";
-    private static final String KEY_BASE_URL = "base_url";
-
-    // Default live cloud endpoint
+    // Permanent Live Cloud Endpoint
     public static final String DEFAULT_BASE_URL = "https://beatsync-91vv.onrender.com";
 
     private static AuthManager instance;
@@ -63,21 +61,6 @@ public class AuthManager {
     }
 
     public String getBaseUrl() {
-        String url = prefs.getString(KEY_BASE_URL, DEFAULT_BASE_URL);
-        if (url == null || url.contains("10.0.2.2") || url.contains("localhost")) {
-            url = DEFAULT_BASE_URL;
-            setBaseUrl(url);
-        }
-        return url;
-    }
-
-    public void setBaseUrl(String url) {
-        if (url != null) {
-            url = url.trim();
-            if (url.endsWith("/")) {
-                url = url.substring(0, url.length() - 1);
-            }
-            prefs.edit().putString(KEY_BASE_URL, url).apply();
-        }
+        return DEFAULT_BASE_URL;
     }
 }

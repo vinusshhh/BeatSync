@@ -36,20 +36,11 @@
             android:letterSpacing="0.2"
             android:layout_marginTop="20dp" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="MINIMAL AUDIO STREAMING ENGINE"
-            android:textColor="@color/text_secondary"
-            android:textSize="10sp"
-            android:letterSpacing="0.15"
-            android:layout_marginTop="6dp" />
-
         <ProgressBar
             android:layout_width="28dp"
             android:layout_height="28dp"
-            android:indeterminateTint="@color/accent_cyan"
-            android:layout_marginTop="32dp" />
+            android:indeterminateTint="@color/text_primary"
+            android:layout_marginTop="28dp" />
     </LinearLayout>
 
 </RelativeLayout>

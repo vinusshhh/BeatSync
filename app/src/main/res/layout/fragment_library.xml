@@ -107,16 +107,6 @@
                                 android:textSize="13sp"
                                 android:layout_marginTop="2dp" />
                         </LinearLayout>
-
-                        <ImageView
-                            android:id="@+id/btnSettings"
-                            android:layout_width="36dp"
-                            android:layout_height="36dp"
-                            android:padding="8dp"
-                            android:src="@drawable/ic_settings"
-                            android:tint="@color/text_secondary"
-                            android:background="?attr/selectableItemBackgroundBorderless"
-                            android:contentDescription="Server Config" />
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 

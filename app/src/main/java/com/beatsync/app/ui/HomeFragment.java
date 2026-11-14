@@ -64,12 +64,6 @@ public class HomeFragment extends Fragment implements MusicPlayerManager.Playbac
             }
         });
 
-        binding.btnQuickProfile.setOnClickListener(v -> {
-            if (getActivity() instanceof MainActivity) {
-                ((MainActivity) getActivity()).selectTab(R.id.nav_library);
-            }
-        });
-
         binding.btnQuickUpload.setOnClickListener(v -> {
             if (getActivity() instanceof MainActivity) {
                 ((MainActivity) getActivity()).selectTab(R.id.nav_upload);

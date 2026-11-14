@@ -3,6 +3,7 @@ package com.beatsync.app.ui;
 import android.app.AlertDialog;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.PopupMenu;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -71,6 +72,8 @@ public class PlaylistDetailActivity extends AppCompatActivity implements MusicPl
 
         binding.btnAddSongs.setOnClickListener(v -> showAddSongsCatalogDialog());
 
+        binding.btnPlaylistOptions.setOnClickListener(this::showPlaylistOptionsMenu);
+
         binding.swipeRefresh.setOnRefreshListener(this::loadPlaylistDetails);
 
         MusicPlayerManager.getInstance(this).addListener(this);
@@ -110,6 +113,96 @@ public class PlaylistDetailActivity extends AppCompatActivity implements MusicPl
                 Toast.makeText(PlaylistDetailActivity.this, "Error: " + error, Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void showPlaylistOptionsMenu(View anchor) {
+        PopupMenu popup = new PopupMenu(this, anchor);
+        popup.getMenu().add(0, 1, 0, "Edit Name & Details");
+        popup.getMenu().add(0, 2, 1, "Delete Playlist");
+
+        popup.setOnMenuItemClickListener(item -> {
+            if (item.getItemId() == 1) {
+                showEditPlaylistDialog();
+                return true;
+            } else if (item.getItemId() == 2) {
+                confirmDeletePlaylist();
+                return true;
+            }
+            return false;
+        });
+        popup.show();
+    }
+
+    private void showEditPlaylistDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_create_playlist, null);
+        builder.setView(dialogView);
+        AlertDialog dialog = builder.create();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
+        EditText etTitle = dialogView.findViewById(R.id.etPlaylistTitle);
+        EditText etDesc = dialogView.findViewById(R.id.etPlaylistDesc);
+        View btnCancel = dialogView.findViewById(R.id.btnCancel);
+        androidx.appcompat.widget.AppCompatButton btnSave = dialogView.findViewById(R.id.btnCreate);
+        btnSave.setText("Save Changes");
+
+        etTitle.setText(playlist.getTitle());
+        etDesc.setText(playlist.getDescription());
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        btnSave.setOnClickListener(v -> {
+            String newTitle = etTitle.getText().toString().trim();
+            String newDesc = etDesc.getText().toString().trim();
+            if (newTitle.isEmpty()) {
+                etTitle.setError("Playlist title required");
+                return;
+            }
+
+            ApiClient.getInstance(this).updatePlaylist(playlist.getId(), newTitle, newDesc, new ApiClient.ApiCallback<Playlist>() {
+                @Override
+                public void onSuccess(Playlist updated) {
+                    Toast.makeText(PlaylistDetailActivity.this, "Playlist updated!", Toast.LENGTH_SHORT).show();
+                    playlist.setTitle(newTitle);
+                    playlist.setDescription(newDesc);
+                    binding.tvHeaderTitle.setText(newTitle);
+                    binding.tvTitle.setText(newTitle);
+                    binding.tvDescription.setText(newDesc.isEmpty() ? "No description provided." : newDesc);
+                    dialog.dismiss();
+                }
+
+                @Override
+                public void onError(String error) {
+                    Toast.makeText(PlaylistDetailActivity.this, "Update failed: " + error, Toast.LENGTH_SHORT).show();
+                }
+            });
+        });
+
+        dialog.show();
+    }
+
+    private void confirmDeletePlaylist() {
+        new AlertDialog.Builder(this)
+                .setTitle("Delete Playlist")
+                .setMessage("Are you sure you want to permanently delete \"" + playlist.getTitle() + "\"?")
+                .setPositiveButton("Delete", (dialog, which) -> {
+                    ApiClient.getInstance(this).deletePlaylist(playlist.getId(), new ApiClient.ApiCallback<String>() {
+                        @Override
+                        public void onSuccess(String result) {
+                            Toast.makeText(PlaylistDetailActivity.this, "Playlist deleted", Toast.LENGTH_SHORT).show();
+                            finish();
+                        }
+
+                        @Override
+                        public void onError(String error) {
+                            Toast.makeText(PlaylistDetailActivity.this, "Error deleting: " + error, Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 
     private void showTrackOptions(Track track, View anchor) {

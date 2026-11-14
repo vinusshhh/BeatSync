@@ -95,9 +95,6 @@ public class LibraryFragment extends Fragment implements MusicPlayerManager.Play
                     .show();
         });
 
-        // Settings / Server Config
-        binding.btnSettings.setOnClickListener(v -> showServerSettingsDialog());
-
         binding.swipeRefresh.setOnRefreshListener(this::loadActiveContent);
 
         MusicPlayerManager.getInstance(requireContext()).addListener(this);
@@ -349,41 +346,6 @@ public class LibraryFragment extends Fragment implements MusicPlayerManager.Play
         });
 
         btnClose.setOnClickListener(v -> dialog.dismiss());
-        dialog.show();
-    }
-
-    private void showServerSettingsDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
-        View dialogView = getLayoutInflater().inflate(R.layout.dialog_server_settings, null);
-        builder.setView(dialogView);
-        AlertDialog dialog = builder.create();
-        if (dialog.getWindow() != null) {
-            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
-        }
-
-        EditText etUrl = dialogView.findViewById(R.id.etServerUrl);
-        TextView btnEmulator = dialogView.findViewById(R.id.btnPresetEmulator);
-        TextView btnLocalhost = dialogView.findViewById(R.id.btnPresetLocalhost);
-        View btnCancel = dialogView.findViewById(R.id.btnCancelServer);
-        View btnSave = dialogView.findViewById(R.id.btnSaveServer);
-
-        etUrl.setText(AuthManager.getInstance(requireContext()).getBaseUrl());
-
-        btnEmulator.setOnClickListener(v -> etUrl.setText("http://10.0.2.2:8000"));
-        btnLocalhost.setOnClickListener(v -> etUrl.setText("http://localhost:8000"));
-
-        btnCancel.setOnClickListener(v -> dialog.dismiss());
-
-        btnSave.setOnClickListener(v -> {
-            String newUrl = etUrl.getText().toString().trim();
-            if (!newUrl.isEmpty()) {
-                AuthManager.getInstance(requireContext()).setBaseUrl(newUrl);
-                Toast.makeText(requireContext(), "Server URL updated", Toast.LENGTH_SHORT).show();
-                dialog.dismiss();
-                loadActiveContent();
-            }
-        });
-
         dialog.show();
     }
 

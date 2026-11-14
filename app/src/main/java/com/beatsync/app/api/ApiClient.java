@@ -251,6 +251,37 @@ public class ApiClient {
         });
     }
 
+    public void updatePlaylist(String playlistId, String title, String description, ApiCallback<Playlist> callback) {
+        String json = gson.toJson(new UpdatePlaylistBody(title, description));
+        RequestBody body = RequestBody.create(json, MediaType.parse("application/json; charset=utf-8"));
+        Request request = newAuthenticatedRequest("/api/playlists/" + playlistId)
+                .put(body)
+                .build();
+        executeCall(request, Playlist.class, callback);
+    }
+
+    public void deletePlaylist(String playlistId, ApiCallback<String> callback) {
+        Request request = newAuthenticatedRequest("/api/playlists/" + playlistId)
+                .delete()
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                dispatchError(callback, "Network error: " + e.getMessage());
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    dispatchSuccess(callback, "Playlist deleted successfully");
+                } else {
+                    dispatchError(callback, "Failed to delete playlist (" + response.code() + ")");
+                }
+            }
+        });
+    }
+
     // ---------------- HELPERS ----------------
 
     private byte[] readUriBytes(Uri uri) {
@@ -345,6 +376,10 @@ public class ApiClient {
         String title, description;
         boolean is_public;
         CreatePlaylistBody(String t, String d, boolean p) { title = t; description = d; is_public = p; }
+    }
+    private static class UpdatePlaylistBody {
+        String title, description;
+        UpdatePlaylistBody(String t, String d) { title = t; description = d; }
     }
     private static class AddTrackBody {
         String track_id;

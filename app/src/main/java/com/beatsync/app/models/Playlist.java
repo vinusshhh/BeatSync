@@ -22,7 +22,7 @@ public class Playlist implements Serializable {
     private String coverUrl;
 
     @SerializedName("is_public")
-    private boolean isPublic;
+    private Object isPublic;
 
     @SerializedName("owner_name")
     private String ownerName;
@@ -50,7 +50,14 @@ public class Playlist implements Serializable {
     public String getCoverUrl() { return coverUrl; }
     public void setCoverUrl(String coverUrl) { this.coverUrl = coverUrl; }
 
-    public boolean isPublic() { return isPublic; }
+    public boolean isPublic() {
+        if (isPublic instanceof Boolean) {
+            return (Boolean) isPublic;
+        } else if (isPublic instanceof Number) {
+            return ((Number) isPublic).intValue() != 0;
+        }
+        return true;
+    }
     public void setPublic(boolean isPublic) { this.isPublic = isPublic; }
 
     public String getOwnerName() { return ownerName != null ? ownerName : "User"; }

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Subtle Sleek Orbital Boundary Ring -->
+    <path
+        android:strokeColor="#25FFFFFF"
+        android:strokeWidth="1.5"
+        android:pathData="M 54,16 A 38,38 0 1,1 53.99,16" />
+
+    <!-- Pulse Equalizer Waveform - 5 Minimalist Sound Pillars -->
+    <!-- Bar 1 -->
+    <path
+        android:fillColor="#E0E0E0"
+        android:pathData="M31,47 A3,3 0 0,1 37,47 V61 A3,3 0 0,1 31,61 Z" />
+
+    <!-- Bar 2 -->
+    <path
+        android:fillColor="#F0F0F0"
+        android:pathData="M41,37 A3,3 0 0,1 47,37 V71 A3,3 0 0,1 41,71 Z" />
+
+    <!-- Bar 3 (Peak) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M51,28 A3,3 0 0,1 57,28 V80 A3,3 0 0,1 51,80 Z" />
+
+    <!-- Bar 4 -->
+    <path
+        android:fillColor="#F0F0F0"
+        android:pathData="M61,39 A3,3 0 0,1 67,39 V69 A3,3 0 0,1 61,69 Z" />
+
+    <!-- Bar 5 -->
+    <path
+        android:fillColor="#E0E0E0"
+        android:pathData="M71,49 A3,3 0 0,1 77,49 V59 A3,3 0 0,1 71,59 Z" />
+
+</vector>

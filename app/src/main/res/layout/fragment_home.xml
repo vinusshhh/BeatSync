@@ -52,16 +52,6 @@
                         android:textStyle="bold"
                         android:layout_marginTop="2dp" />
                 </LinearLayout>
-
-                <ImageView
-                    android:id="@+id/btnQuickProfile"
-                    android:layout_width="42dp"
-                    android:layout_height="42dp"
-                    android:padding="9dp"
-                    android:src="@drawable/ic_settings"
-                    android:tint="@color/text_primary"
-                    android:background="@drawable/bg_quick_action"
-                    android:contentDescription="Settings" />
             </LinearLayout>
 
             <!-- Quick Action Shortcuts Bar -->

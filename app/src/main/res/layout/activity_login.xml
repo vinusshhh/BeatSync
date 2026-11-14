@@ -13,33 +13,14 @@
         android:gravity="center_vertical">
 
         <!-- Top Technical Header -->
-        <LinearLayout
-            android:layout_width="match_parent"
+        <TextView
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
-
-            <TextView
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="BEATSYNC // ACCESS"
-                android:textColor="@color/accent_cyan"
-                android:textSize="11sp"
-                android:textStyle="bold"
-                android:letterSpacing="0.15" />
-
-            <!-- Server Settings Button -->
-            <ImageView
-                android:id="@+id/btnServerSettings"
-                android:layout_width="36dp"
-                android:layout_height="36dp"
-                android:padding="8dp"
-                android:src="@drawable/ic_settings"
-                android:tint="@color/text_secondary"
-                android:background="?attr/selectableItemBackgroundBorderless"
-                android:contentDescription="Server Settings" />
-        </LinearLayout>
+            android:text="BEATSYNC // ACCESS"
+            android:textColor="@color/text_secondary"
+            android:textSize="11sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.15" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -159,17 +140,6 @@
                 android:padding="8dp"
                 android:background="?attr/selectableItemBackground" />
         </LinearLayout>
-
-        <!-- Current Server indicator -->
-        <TextView
-            android:id="@+id/tvServerInfo"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Server: http://10.0.2.2:8000"
-            android:textColor="@color/text_tertiary"
-            android:textSize="11sp"
-            android:layout_gravity="center"
-            android:layout_marginTop="24dp" />
 
     </LinearLayout>
 

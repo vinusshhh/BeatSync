@@ -54,6 +54,10 @@ class PlaylistCreateRequest(BaseModel):
     description: Optional[str] = ""
     is_public: Optional[bool] = True
 
+class PlaylistUpdateRequest(BaseModel):
+    title: str
+    description: Optional[str] = ""
+
 class PlaylistAddTrackRequest(BaseModel):
     track_id: str
 
@@ -378,8 +382,50 @@ def create_playlist(
     
     row = conn.execute("SELECT * FROM playlists WHERE id = ?", (playlist_id,)).fetchone()
     d = dict(row)
+    d["is_public"] = bool(d["is_public"])
+    d["owner_name"] = current_user["name"]
     d["track_count"] = 0
     return d
+
+@app.put("/api/playlists/{playlist_id}")
+def update_playlist(
+    playlist_id: str,
+    req: PlaylistUpdateRequest,
+    current_user: dict = Depends(get_current_user),
+    conn: sqlite3.Connection = Depends(get_db)
+):
+    playlist = conn.execute("SELECT * FROM playlists WHERE id = ?", (playlist_id,)).fetchone()
+    if not playlist:
+        raise HTTPException(status_code=404, detail="Playlist not found")
+    if playlist["user_id"] != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Only playlist owner can edit this playlist")
+        
+    conn.execute(
+        "UPDATE playlists SET title = ?, description = ? WHERE id = ?",
+        (req.title.strip(), req.description.strip() if req.description else "", playlist_id)
+    )
+    conn.commit()
+    row = conn.execute("SELECT * FROM playlists WHERE id = ?", (playlist_id,)).fetchone()
+    d = dict(row)
+    d["is_public"] = bool(d["is_public"])
+    return d
+
+@app.delete("/api/playlists/{playlist_id}")
+def delete_playlist(
+    playlist_id: str,
+    current_user: dict = Depends(get_current_user),
+    conn: sqlite3.Connection = Depends(get_db)
+):
+    playlist = conn.execute("SELECT * FROM playlists WHERE id = ?", (playlist_id,)).fetchone()
+    if not playlist:
+        raise HTTPException(status_code=404, detail="Playlist not found")
+    if playlist["user_id"] != current_user["id"]:
+        raise HTTPException(status_code=403, detail="Only playlist owner can delete this playlist")
+        
+    conn.execute("DELETE FROM playlist_tracks WHERE playlist_id = ?", (playlist_id,))
+    conn.execute("DELETE FROM playlists WHERE id = ?", (playlist_id,))
+    conn.commit()
+    return {"status": "success", "message": "Playlist deleted successfully"}
 
 @app.get("/api/playlists")
 def get_playlists(
@@ -408,7 +454,12 @@ def get_playlists(
         """
         rows = conn.execute(sql).fetchall()
         
-    return [dict(r) for r in rows]
+    playlists = []
+    for r in rows:
+        d = dict(r)
+        d["is_public"] = bool(d["is_public"])
+        playlists.append(d)
+    return playlists
 
 @app.get("/api/playlists/{playlist_id}")
 def get_playlist_details(
