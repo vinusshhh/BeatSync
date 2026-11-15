@@ -23,6 +23,7 @@ import com.beatsync.app.auth.AuthManager;
 import com.beatsync.app.databinding.FragmentLibraryBinding;
 import com.beatsync.app.models.Playlist;
 import com.beatsync.app.models.Track;
+import com.beatsync.app.ui.utils.AnimationHelper;
 import com.beatsync.app.models.User;
 import com.beatsync.app.player.MusicPlayerManager;
 import com.beatsync.app.ui.adapters.PlaylistAdapter;
@@ -71,10 +72,16 @@ public class LibraryFragment extends Fragment implements MusicPlayerManager.Play
         binding.rvTracks.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.rvTracks.setAdapter(trackAdapter);
 
-        // Tabs
+        // Tabs & Liquid Glass Sliding Pill
         binding.tabPlaylists.setOnClickListener(v -> switchTab("playlists"));
         binding.tabPrivateVault.setOnClickListener(v -> switchTab("private"));
         binding.tabMyUploads.setOnClickListener(v -> switchTab("uploads"));
+
+        binding.libraryTabGroup.setOnTabSelectedListener((pos, tab) -> {
+            if (pos == 0) switchTab("playlists");
+            else if (pos == 1) switchTab("private");
+            else if (pos == 2) switchTab("uploads");
+        });
 
         // Create Playlist
         binding.btnCreatePlaylist.setOnClickListener(v -> showCreatePlaylistDialog());
@@ -103,6 +110,22 @@ public class LibraryFragment extends Fragment implements MusicPlayerManager.Play
         MusicPlayerManager.getInstance(requireContext()).addListener(this);
 
         switchTab("playlists");
+        AnimationHelper.animateRubberEntrance(view);
+    }
+
+    @Override
+    public void onHiddenChanged(boolean hidden) {
+        super.onHiddenChanged(hidden);
+        if (!hidden && getView() != null) {
+            AnimationHelper.animateRubberEntrance(getView());
+            if (binding != null) {
+                if (currentTab.equals("playlists") && binding.rvPlaylists != null) {
+                    AnimationHelper.animateListItems(binding.rvPlaylists);
+                } else if (binding.rvTracks != null) {
+                    AnimationHelper.animateListItems(binding.rvTracks);
+                }
+            }
+        }
     }
 
     @Override
@@ -122,6 +145,11 @@ public class LibraryFragment extends Fragment implements MusicPlayerManager.Play
         currentTab = tab;
         updateTabStyles();
 
+        int targetIdx = tab.equals("playlists") ? 0 : (tab.equals("private") ? 1 : 2);
+        if (binding != null && binding.libraryTabGroup != null) {
+            binding.libraryTabGroup.selectTab(targetIdx, true, false);
+        }
+
         if (tab.equals("playlists")) {
             binding.rvPlaylists.setVisibility(View.VISIBLE);
             binding.rvTracks.setVisibility(View.GONE);
@@ -136,18 +164,11 @@ public class LibraryFragment extends Fragment implements MusicPlayerManager.Play
     }
 
     private void updateTabStyles() {
-        int activeBg = R.drawable.bg_button_primary;
-        int activeText = ContextCompat.getColor(requireContext(), R.color.text_inverse);
-        int inactiveBg = R.drawable.bg_card_minimal;
-        int inactiveText = ContextCompat.getColor(requireContext(), R.color.text_secondary);
+        int activeText = ContextCompat.getColor(requireContext(), R.color.text_primary);
+        int inactiveText = ContextCompat.getColor(requireContext(), R.color.text_tertiary);
 
-        binding.tabPlaylists.setBackgroundResource(currentTab.equals("playlists") ? activeBg : inactiveBg);
         binding.tabPlaylists.setTextColor(currentTab.equals("playlists") ? activeText : inactiveText);
-
-        binding.tabPrivateVault.setBackgroundResource(currentTab.equals("private") ? activeBg : inactiveBg);
         binding.tabPrivateVault.setTextColor(currentTab.equals("private") ? activeText : inactiveText);
-
-        binding.tabMyUploads.setBackgroundResource(currentTab.equals("uploads") ? activeBg : inactiveBg);
         binding.tabMyUploads.setTextColor(currentTab.equals("uploads") ? activeText : inactiveText);
     }
 

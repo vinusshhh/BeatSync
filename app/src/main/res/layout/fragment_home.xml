@@ -4,7 +4,7 @@
     android:id="@+id/swipeRefresh"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg_dark">
+    android:background="@drawable/bg_ambient_lighting">
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
@@ -64,7 +64,7 @@
                 android:paddingTop="4dp"
                 android:paddingBottom="16dp">
 
-                <!-- Upload Shortcut Button -->
+                <!-- Upload Shortcut Button (Liquid Glass Pill) -->
                 <LinearLayout
                     android:id="@+id/btnQuickUpload"
                     android:layout_width="0dp"
@@ -72,7 +72,7 @@
                     android:layout_weight="1"
                     android:orientation="horizontal"
                     android:gravity="center"
-                    android:background="@drawable/bg_button_primary"
+                    android:background="@drawable/bg_liquid_glass_pill"
                     android:clickable="true"
                     android:focusable="true">
 
@@ -80,21 +80,21 @@
                         android:layout_width="18dp"
                         android:layout_height="18dp"
                         android:src="@drawable/ic_upload"
-                        android:tint="@color/text_inverse"
+                        android:tint="@color/text_primary"
                         android:contentDescription="Upload" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Upload Music"
-                        android:textColor="@color/text_inverse"
+                        android:textColor="@color/text_primary"
                         android:textSize="13sp"
                         android:textStyle="bold"
                         android:letterSpacing="0.04"
                         android:layout_marginStart="8dp" />
                 </LinearLayout>
 
-                <!-- Search Shortcut Button -->
+                <!-- Search Shortcut Button (Liquid Glass Pill) -->
                 <LinearLayout
                     android:id="@+id/btnQuickSearch"
                     android:layout_width="0dp"
@@ -102,7 +102,7 @@
                     android:layout_weight="1"
                     android:orientation="horizontal"
                     android:gravity="center"
-                    android:background="@drawable/bg_quick_action"
+                    android:background="@drawable/bg_liquid_glass_pill"
                     android:layout_marginStart="10dp"
                     android:clickable="true"
                     android:focusable="true">

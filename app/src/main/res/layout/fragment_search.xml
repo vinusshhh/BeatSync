@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/bg_dark">
+    android:background="@drawable/bg_ambient_lighting">
 
     <!-- Header & Search Input -->
     <LinearLayout
@@ -33,12 +33,12 @@
             android:textStyle="bold"
             android:layout_marginTop="4dp" />
 
-        <!-- Search Input Bar -->
+        <!-- Search Input Bar (Liquid Glass Capsule) -->
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="50dp"
             android:layout_marginTop="16dp"
-            android:background="@drawable/bg_edit_text">
+            android:background="@drawable/bg_liquid_glass_card">
 
             <ImageView
                 android:id="@+id/ivSearchIcon"
@@ -83,66 +83,71 @@
                 android:contentDescription="Clear" />
         </RelativeLayout>
 
-        <!-- Filter Chips Row -->
+        <!-- Filter Chips Row: Apple Liquid Glass Sliding Selection Pill -->
         <HorizontalScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:scrollbars="none"
             android:layout_marginTop="14dp">
 
-            <LinearLayout
+            <com.beatsync.app.ui.custom.LiquidGlassTabGroup
+                android:id="@+id/searchTabGroup"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:layout_height="40dp"
+                android:background="@drawable/bg_liquid_glass_dock">
 
-                <TextView
-                    android:id="@+id/chipAll"
+                <LinearLayout
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="All Tracks"
-                    android:textSize="12sp"
-                    android:textStyle="bold"
-                    android:paddingStart="14dp"
-                    android:paddingEnd="14dp"
-                    android:paddingTop="6dp"
-                    android:paddingBottom="6dp"
-                    android:background="@drawable/bg_button_primary"
-                    android:textColor="@color/text_inverse"
-                    android:clickable="true"
-                    android:focusable="true" />
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:paddingStart="4dp"
+                    android:paddingEnd="4dp">
 
-                <TextView
-                    android:id="@+id/chipPublic"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Public Catalog"
-                    android:textSize="12sp"
-                    android:paddingStart="14dp"
-                    android:paddingEnd="14dp"
-                    android:paddingTop="6dp"
-                    android:paddingBottom="6dp"
-                    android:background="@drawable/bg_card_minimal"
-                    android:textColor="@color/text_secondary"
-                    android:layout_marginStart="8dp"
-                    android:clickable="true"
-                    android:focusable="true" />
+                    <TextView
+                        android:id="@+id/chipAll"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:text="All Tracks"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:background="@android:color/transparent"
+                        android:textColor="@color/text_primary"
+                        android:clickable="true"
+                        android:focusable="true" />
 
-                <TextView
-                    android:id="@+id/chipPrivate"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="My Private Vault"
-                    android:textSize="12sp"
-                    android:paddingStart="14dp"
-                    android:paddingEnd="14dp"
-                    android:paddingTop="6dp"
-                    android:paddingBottom="6dp"
-                    android:background="@drawable/bg_card_minimal"
-                    android:textColor="@color/text_secondary"
-                    android:layout_marginStart="8dp"
-                    android:clickable="true"
-                    android:focusable="true" />
-            </LinearLayout>
+                    <TextView
+                        android:id="@+id/chipPublic"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:text="Public Catalog"
+                        android:textSize="12sp"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:background="@android:color/transparent"
+                        android:textColor="@color/text_tertiary"
+                        android:clickable="true"
+                        android:focusable="true" />
+
+                    <TextView
+                        android:id="@+id/chipPrivate"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
+                        android:text="My Private Vault"
+                        android:textSize="12sp"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
+                        android:background="@android:color/transparent"
+                        android:textColor="@color/text_tertiary"
+                        android:clickable="true"
+                        android:focusable="true" />
+                </LinearLayout>
+            </com.beatsync.app.ui.custom.LiquidGlassTabGroup>
         </HorizontalScrollView>
     </LinearLayout>
 

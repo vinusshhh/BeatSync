@@ -92,6 +92,17 @@ public class AnimationHelper {
         animateRubberEntrance(view, position);
     }
 
+    public static void animateRubberEntrance(View view) {
+        animateRubberEntrance(view, 0);
+    }
+
+    public static void animateListItems(View recyclerView) {
+        if (recyclerView == null) return;
+        if (recyclerView instanceof androidx.recyclerview.widget.RecyclerView) {
+            ((androidx.recyclerview.widget.RecyclerView) recyclerView).scheduleLayoutAnimation();
+        }
+    }
+
     public static void animateRubberEntrance(View view, int position) {
         if (view == null) return;
         view.setAlpha(0f);

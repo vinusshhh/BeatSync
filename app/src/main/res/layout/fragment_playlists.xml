@@ -3,7 +3,7 @@
     android:id="@+id/swipeRefresh"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg_dark">
+    android:background="@drawable/bg_ambient_lighting">
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
@@ -43,12 +43,12 @@
                     android:textStyle="bold"
                     android:layout_marginTop="2dp" />
 
-                <!-- Create New Playlist Button -->
+                <!-- Create New Playlist Button (Liquid Glass Pill) -->
                 <LinearLayout
                     android:id="@+id/btnCreatePlaylist"
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
-                    android:background="@drawable/bg_button_primary"
+                    android:background="@drawable/bg_liquid_glass_pill"
                     android:orientation="horizontal"
                     android:gravity="center"
                     android:layout_marginTop="18dp"
@@ -59,14 +59,14 @@
                         android:layout_width="18dp"
                         android:layout_height="18dp"
                         android:src="@drawable/ic_add"
-                        android:tint="@color/text_inverse"
+                        android:tint="@color/text_primary"
                         android:contentDescription="Create" />
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Create New Playlist"
-                        android:textColor="@color/text_inverse"
+                        android:textColor="@color/text_primary"
                         android:textSize="14sp"
                         android:textStyle="bold"
                         android:letterSpacing="0.04"

@@ -46,6 +46,22 @@ public class AdminFragment extends Fragment {
         binding.swipeRefresh.setOnRefreshListener(this::loadData);
 
         loadData();
+        AnimationHelper.animateRubberEntrance(view);
+    }
+
+    @Override
+    public void onHiddenChanged(boolean hidden) {
+        super.onHiddenChanged(hidden);
+        if (!hidden && getView() != null) {
+            AnimationHelper.animateRubberEntrance(getView());
+            if (binding != null) {
+                if (isUsersTab && binding.rvAdminUsers != null) {
+                    AnimationHelper.animateListItems(binding.rvAdminUsers);
+                } else if (!isUsersTab && binding.rvAdminTracks != null) {
+                    AnimationHelper.animateListItems(binding.rvAdminTracks);
+                }
+            }
+        }
     }
 
     private void setupAdapters() {
@@ -96,22 +112,29 @@ public class AdminFragment extends Fragment {
                 updateTabVisuals();
             }
         });
+
+        binding.adminTabGroup.setOnTabSelectedListener((pos, tab) -> {
+            boolean wantUsers = (pos == 0);
+            if (wantUsers != isUsersTab) {
+                isUsersTab = wantUsers;
+                updateTabVisuals();
+            }
+        });
     }
 
     private void updateTabVisuals() {
+        int targetIdx = isUsersTab ? 0 : 1;
+        binding.adminTabGroup.selectTab(targetIdx, true, false);
+
         if (isUsersTab) {
-            binding.btnTabUsers.setBackgroundResource(R.drawable.bg_liquid_glass_pill);
             binding.btnTabUsers.setTextColor(Color.WHITE);
-            binding.btnTabTracks.setBackgroundColor(Color.TRANSPARENT);
             binding.btnTabTracks.setTextColor(Color.parseColor("#888888"));
 
             binding.rvAdminTracks.setVisibility(View.GONE);
             binding.rvAdminUsers.setVisibility(View.VISIBLE);
             AnimationHelper.applySpringScaleFeedback(binding.btnTabUsers);
         } else {
-            binding.btnTabTracks.setBackgroundResource(R.drawable.bg_liquid_glass_pill);
             binding.btnTabTracks.setTextColor(Color.WHITE);
-            binding.btnTabUsers.setBackgroundColor(Color.TRANSPARENT);
             binding.btnTabUsers.setTextColor(Color.parseColor("#888888"));
 
             binding.rvAdminUsers.setVisibility(View.GONE);

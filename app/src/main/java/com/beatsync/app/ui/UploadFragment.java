@@ -1,6 +1,7 @@
 package com.beatsync.app.ui;
 
 import android.database.Cursor;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.OpenableColumns;
@@ -20,6 +21,7 @@ import com.beatsync.app.auth.AuthManager;
 import com.beatsync.app.databinding.FragmentUploadBinding;
 import com.beatsync.app.models.Track;
 import com.beatsync.app.models.User;
+import com.beatsync.app.ui.utils.AnimationHelper;
 import com.bumptech.glide.Glide;
 
 public class UploadFragment extends Fragment {
@@ -83,23 +85,46 @@ public class UploadFragment extends Fragment {
         }
 
         binding.switchPrivacy.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            int tabIndex = isChecked ? 0 : 1;
+            binding.uploadPrivacyTabGroup.selectTab(tabIndex, true, false);
+
             if (isChecked) {
                 // Public mode
+                binding.btnPrivacyPublic.setTextColor(Color.WHITE);
+                binding.btnPrivacyPrivate.setTextColor(Color.parseColor("#888888"));
                 binding.tvPrivacyModeTitle.setText("Public Release");
                 binding.tvPrivacyModeDesc.setText(R.string.visibility_public_desc);
                 binding.ivPrivacyIcon.setImageResource(R.drawable.ic_globe);
             } else {
                 // Private mode
+                binding.btnPrivacyPrivate.setTextColor(Color.WHITE);
+                binding.btnPrivacyPublic.setTextColor(Color.parseColor("#888888"));
                 binding.tvPrivacyModeTitle.setText("Private Vault Track");
                 binding.tvPrivacyModeDesc.setText(R.string.visibility_private_desc);
                 binding.ivPrivacyIcon.setImageResource(R.drawable.ic_lock);
             }
         });
 
+        binding.btnPrivacyPublic.setOnClickListener(v -> binding.switchPrivacy.setChecked(true));
+        binding.btnPrivacyPrivate.setOnClickListener(v -> binding.switchPrivacy.setChecked(false));
+
+        binding.uploadPrivacyTabGroup.setOnTabSelectedListener((pos, tab) -> {
+            binding.switchPrivacy.setChecked(pos == 0);
+        });
+
         binding.btnPickAudio.setOnClickListener(v -> audioPickerLauncher.launch("audio/*"));
         binding.btnPickCover.setOnClickListener(v -> coverPickerLauncher.launch("image/*"));
 
         binding.btnSubmitUpload.setOnClickListener(v -> startUpload());
+        AnimationHelper.animateRubberEntrance(view);
+    }
+
+    @Override
+    public void onHiddenChanged(boolean hidden) {
+        super.onHiddenChanged(hidden);
+        if (!hidden && getView() != null) {
+            AnimationHelper.animateRubberEntrance(getView());
+        }
     }
 
     @Override

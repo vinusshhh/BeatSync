@@ -80,41 +80,48 @@
         </LinearLayout>
     </LinearLayout>
 
-    <!-- Liquid Glass Segmented Tab Switcher -->
-    <LinearLayout
+    <!-- Liquid Glass Segmented Tab Switcher with Sliding Pill -->
+    <com.beatsync.app.ui.custom.LiquidGlassTabGroup
+        android:id="@+id/adminTabGroup"
         android:layout_width="match_parent"
         android:layout_height="48dp"
-        android:orientation="horizontal"
         android:background="@drawable/bg_liquid_glass_dock"
-        android:padding="4dp"
         android:layout_marginBottom="18dp">
 
-        <TextView
-            android:id="@+id/btnTabUsers"
-            android:layout_width="0dp"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:text="USERS &amp; PASSWORDS"
-            android:textColor="@color/text_primary"
-            android:textSize="11sp"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:letterSpacing="0.08"
-            android:background="@drawable/bg_liquid_glass_pill" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:padding="4dp">
 
-        <TextView
-            android:id="@+id/btnTabTracks"
-            android:layout_width="0dp"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:text="ALL MUSIC"
-            android:textColor="@color/text_secondary"
-            android:textSize="11sp"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:letterSpacing="0.08"
-            android:background="@android:color/transparent" />
-    </LinearLayout>
+            <TextView
+                android:id="@+id/btnTabUsers"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="USERS &amp; PASSWORDS"
+                android:textColor="@color/text_primary"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:letterSpacing="0.08"
+                android:background="@android:color/transparent" />
+
+            <TextView
+                android:id="@+id/btnTabTracks"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="ALL MUSIC"
+                android:textColor="@color/text_tertiary"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:letterSpacing="0.08"
+                android:background="@android:color/transparent" />
+        </LinearLayout>
+    </com.beatsync.app.ui.custom.LiquidGlassTabGroup>
 
     <!-- Content Area with SwipeRefresh -->
     <androidx.swiperefreshlayout.widget.SwipeRefreshLayout

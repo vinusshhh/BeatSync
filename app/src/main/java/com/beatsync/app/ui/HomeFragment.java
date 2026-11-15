@@ -86,6 +86,18 @@ public class HomeFragment extends Fragment implements MusicPlayerManager.Playbac
 
         MusicPlayerManager.getInstance(requireContext()).addListener(this);
         loadTracks();
+        AnimationHelper.animateRubberEntrance(view);
+    }
+
+    @Override
+    public void onHiddenChanged(boolean hidden) {
+        super.onHiddenChanged(hidden);
+        if (!hidden && getView() != null) {
+            AnimationHelper.animateRubberEntrance(getView());
+            if (binding != null && binding.rvTracks != null) {
+                AnimationHelper.animateListItems(binding.rvTracks);
+            }
+        }
     }
 
     @Override

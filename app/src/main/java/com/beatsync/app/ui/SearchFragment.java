@@ -23,6 +23,7 @@ import com.beatsync.app.databinding.FragmentSearchBinding;
 import com.beatsync.app.models.Playlist;
 import com.beatsync.app.models.Track;
 import com.beatsync.app.player.MusicPlayerManager;
+import com.beatsync.app.ui.utils.AnimationHelper;
 import com.beatsync.app.ui.adapters.PlaylistAdapter;
 import com.beatsync.app.ui.adapters.TrackAdapter;
 import java.util.List;
@@ -67,15 +68,33 @@ public class SearchFragment extends Fragment implements MusicPlayerManager.Playb
 
         binding.btnClearSearch.setOnClickListener(v -> binding.etSearch.setText(""));
 
-        // Chips
+        // Chips & Liquid Glass Sliding Pill
         binding.chipAll.setOnClickListener(v -> selectFilter("all"));
         binding.chipPublic.setOnClickListener(v -> selectFilter("public"));
         binding.chipPrivate.setOnClickListener(v -> selectFilter("private"));
+
+        binding.searchTabGroup.setOnTabSelectedListener((pos, tab) -> {
+            if (pos == 0) selectFilter("all");
+            else if (pos == 1) selectFilter("public");
+            else if (pos == 2) selectFilter("private");
+        });
 
         MusicPlayerManager.getInstance(requireContext()).addListener(this);
 
         // Initial search to display list
         performSearch("");
+        AnimationHelper.animateRubberEntrance(view);
+    }
+
+    @Override
+    public void onHiddenChanged(boolean hidden) {
+        super.onHiddenChanged(hidden);
+        if (!hidden && getView() != null) {
+            AnimationHelper.animateRubberEntrance(getView());
+            if (binding != null && binding.rvSearchResults != null) {
+                AnimationHelper.animateListItems(binding.rvSearchResults);
+            }
+        }
     }
 
     @Override
@@ -88,22 +107,19 @@ public class SearchFragment extends Fragment implements MusicPlayerManager.Playb
     private void selectFilter(String filter) {
         currentFilter = filter;
         updateChipStyles();
+        int tabIdx = filter.equals("all") ? 0 : (filter.equals("public") ? 1 : 2);
+        if (binding != null && binding.searchTabGroup != null) {
+            binding.searchTabGroup.selectTab(tabIdx, true, false);
+        }
         performSearch(binding.etSearch.getText().toString());
     }
 
     private void updateChipStyles() {
-        int activeBg = R.drawable.bg_button_primary;
-        int activeText = ContextCompat.getColor(requireContext(), R.color.text_inverse);
-        int inactiveBg = R.drawable.bg_card_minimal;
-        int inactiveText = ContextCompat.getColor(requireContext(), R.color.text_secondary);
+        int activeText = ContextCompat.getColor(requireContext(), R.color.text_primary);
+        int inactiveText = ContextCompat.getColor(requireContext(), R.color.text_tertiary);
 
-        binding.chipAll.setBackgroundResource(currentFilter.equals("all") ? activeBg : inactiveBg);
         binding.chipAll.setTextColor(currentFilter.equals("all") ? activeText : inactiveText);
-
-        binding.chipPublic.setBackgroundResource(currentFilter.equals("public") ? activeBg : inactiveBg);
         binding.chipPublic.setTextColor(currentFilter.equals("public") ? activeText : inactiveText);
-
-        binding.chipPrivate.setBackgroundResource(currentFilter.equals("private") ? activeBg : inactiveBg);
         binding.chipPrivate.setTextColor(currentFilter.equals("private") ? activeText : inactiveText);
     }
 

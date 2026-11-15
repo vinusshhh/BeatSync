@@ -48,6 +48,18 @@ public class PlaylistsFragment extends Fragment {
         binding.swipeRefresh.setOnRefreshListener(this::loadPlaylists);
 
         loadPlaylists();
+        com.beatsync.app.ui.utils.AnimationHelper.animateRubberEntrance(view);
+    }
+
+    @Override
+    public void onHiddenChanged(boolean hidden) {
+        super.onHiddenChanged(hidden);
+        if (!hidden && getView() != null) {
+            com.beatsync.app.ui.utils.AnimationHelper.animateRubberEntrance(getView());
+            if (binding != null && binding.rvPlaylists != null) {
+                com.beatsync.app.ui.utils.AnimationHelper.animateListItems(binding.rvPlaylists);
+            }
+        }
     }
 
     @Override

@@ -4,7 +4,7 @@
     android:id="@+id/swipeRefresh"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg_dark">
+    android:background="@drawable/bg_ambient_lighting">
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
@@ -151,67 +151,72 @@
                         android:letterSpacing="0.1" />
                 </LinearLayout>
 
-                <!-- Section Selector Chips -->
+                <!-- Section Selector Chips: Apple Liquid Glass Sliding Pill -->
                 <HorizontalScrollView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:scrollbars="none"
                     android:layout_marginTop="20dp">
 
-                    <LinearLayout
+                    <com.beatsync.app.ui.custom.LiquidGlassTabGroup
+                        android:id="@+id/libraryTabGroup"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal">
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_liquid_glass_dock">
 
-                        <TextView
-                            android:id="@+id/tabPlaylists"
+                        <LinearLayout
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Playlists"
-                            android:textSize="12sp"
-                            android:textStyle="bold"
-                            android:paddingStart="14dp"
-                            android:paddingEnd="14dp"
-                            android:paddingTop="7dp"
-                            android:paddingBottom="7dp"
-                            android:background="@drawable/bg_button_primary"
-                            android:textColor="@color/text_inverse"
-                            android:clickable="true"
-                            android:focusable="true" />
+                            android:layout_height="match_parent"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:paddingStart="4dp"
+                            android:paddingEnd="4dp">
 
-                        <TextView
-                            android:id="@+id/tabPrivateVault"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Private Vault"
-                            android:textSize="12sp"
-                            android:paddingStart="14dp"
-                            android:paddingEnd="14dp"
-                            android:paddingTop="7dp"
-                            android:paddingBottom="7dp"
-                            android:background="@drawable/bg_card_minimal"
-                            android:textColor="@color/text_secondary"
-                            android:layout_marginStart="8dp"
-                            android:clickable="true"
-                            android:focusable="true" />
+                            <TextView
+                                android:id="@+id/tabPlaylists"
+                                android:layout_width="wrap_content"
+                                android:layout_height="match_parent"
+                                android:gravity="center"
+                                android:text="Playlists"
+                                android:textSize="12sp"
+                                android:textStyle="bold"
+                                android:paddingStart="16dp"
+                                android:paddingEnd="16dp"
+                                android:background="@android:color/transparent"
+                                android:textColor="@color/text_primary"
+                                android:clickable="true"
+                                android:focusable="true" />
 
-                        <TextView
-                            android:id="@+id/tabMyUploads"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="My Uploads"
-                            android:textSize="12sp"
-                            android:paddingStart="14dp"
-                            android:paddingEnd="14dp"
-                            android:paddingTop="7dp"
-                            android:paddingBottom="7dp"
-                            android:background="@drawable/bg_card_minimal"
-                            android:textColor="@color/text_secondary"
-                            android:layout_marginStart="8dp"
-                            android:clickable="true"
-                            android:focusable="true" />
+                            <TextView
+                                android:id="@+id/tabPrivateVault"
+                                android:layout_width="wrap_content"
+                                android:layout_height="match_parent"
+                                android:gravity="center"
+                                android:text="Private Vault"
+                                android:textSize="12sp"
+                                android:paddingStart="16dp"
+                                android:paddingEnd="16dp"
+                                android:background="@android:color/transparent"
+                                android:textColor="@color/text_tertiary"
+                                android:clickable="true"
+                                android:focusable="true" />
 
-                    </LinearLayout>
+                            <TextView
+                                android:id="@+id/tabMyUploads"
+                                android:layout_width="wrap_content"
+                                android:layout_height="match_parent"
+                                android:gravity="center"
+                                android:text="My Uploads"
+                                android:textSize="12sp"
+                                android:paddingStart="16dp"
+                                android:paddingEnd="16dp"
+                                android:background="@android:color/transparent"
+                                android:textColor="@color/text_tertiary"
+                                android:clickable="true"
+                                android:focusable="true" />
+
+                        </LinearLayout>
+                    </com.beatsync.app.ui.custom.LiquidGlassTabGroup>
                 </HorizontalScrollView>
 
                 <!-- Action Button: Create Playlist -->

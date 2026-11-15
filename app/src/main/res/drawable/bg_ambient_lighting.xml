@@ -1,37 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Solid OLED Deep Dark Base -->
+    <!-- Pure OLED Pitch Black Base -->
     <item>
         <shape android:shape="rectangle">
-            <solid android:color="#05070C" />
+            <solid android:color="#000000" />
         </shape>
     </item>
 
-    <!-- Upper Ambient Indigo Glow (Diffusing behind center stage) -->
+    <!-- Dynamic Photorealistic OLED Chromatic Light Mesh (Indigo, Violet, Azure, Cyan) -->
     <item>
-        <shape android:shape="rectangle">
-            <gradient
-                android:type="radial"
-                android:gradientRadius="480dp"
-                android:centerX="50%"
-                android:centerY="30%"
-                android:startColor="#332B4066"
-                android:centerColor="#14172238"
-                android:endColor="#00000000" />
-        </shape>
+        <bitmap
+            android:src="@drawable/bg_oled_mesh"
+            android:gravity="center"
+            android:tileMode="disabled" />
     </item>
 
-    <!-- Lower Ambient Slate Blue dispersion (Diffusing behind floating player dock) -->
+    <!-- Optical Frosted Vignette for 100% High Contrast Typography -->
     <item>
         <shape android:shape="rectangle">
             <gradient
-                android:type="radial"
-                android:gradientRadius="420dp"
-                android:centerX="50%"
-                android:centerY="85%"
-                android:startColor="#261E2E4A"
-                android:centerColor="#0D131E30"
-                android:endColor="#00000000" />
+                android:angle="270"
+                android:startColor="#66000000"
+                android:centerColor="#33000000"
+                android:endColor="#80000000"
+                android:type="linear" />
         </shape>
     </item>
 </layer-list>

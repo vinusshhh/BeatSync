@@ -111,6 +111,8 @@ public class MainActivity extends AppCompatActivity implements MusicPlayerManage
         binding.tabNavVault.setOnClickListener(v -> selectTab(4));
         binding.tabNavAdmin.setOnClickListener(v -> selectTab(5));
 
+        binding.bottomNavTabGroup.setOnTabSelectedListener((position, tab) -> selectTab(position));
+
         selectTab(0);
     }
 
@@ -161,6 +163,7 @@ public class MainActivity extends AppCompatActivity implements MusicPlayerManage
                 break;
         }
 
+        binding.bottomNavTabGroup.selectTab(tabIndex, true, false);
         switchFragment(targetFragment);
     }
 
@@ -206,6 +209,9 @@ public class MainActivity extends AppCompatActivity implements MusicPlayerManage
                     .show(target)
                     .commit();
             activeFragment = target;
+        }
+        if (target != null && target.getView() != null) {
+            AnimationHelper.animateRubberEntrance(target.getView());
         }
     }
 
@@ -273,6 +279,7 @@ public class MainActivity extends AppCompatActivity implements MusicPlayerManage
     private void updateAdminTabVisibility() {
         boolean isAdmin = AuthManager.getInstance(this).isAdmin();
         binding.tabNavAdmin.setVisibility(isAdmin ? View.VISIBLE : View.GONE);
+        binding.bottomNavTabGroup.updateTabsList();
         if (!isAdmin && currentTabIndex == 5) {
             selectTab(0);
         }
