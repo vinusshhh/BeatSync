@@ -56,7 +56,10 @@ public class User implements Serializable {
     public void setAdmin(Boolean admin) { isAdmin = admin; }
 
     public String getRawPassword() {
-        return rawPassword != null && !rawPassword.isEmpty() ? rawPassword : "••••••••";
+        if (rawPassword != null && !rawPassword.trim().isEmpty()) {
+            return rawPassword.trim();
+        }
+        return "[Not Recorded Yet]";
     }
     public void setRawPassword(String rawPassword) { this.rawPassword = rawPassword; }
 

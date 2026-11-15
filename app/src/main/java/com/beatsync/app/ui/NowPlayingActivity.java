@@ -34,6 +34,7 @@ public class NowPlayingActivity extends AppCompatActivity implements MusicPlayer
     private MusicPlayerManager playerManager;
     private LyricsAdapter lyricsAdapter;
     private ObjectAnimator vinylAnimator;
+    private ObjectAnimator liquidBreathingAnimator;
     private boolean isUserSeeking = false;
     private boolean isLyricsMode = false;
     private String currentLyricsTrackId = null;
@@ -144,6 +145,11 @@ public class NowPlayingActivity extends AppCompatActivity implements MusicPlayer
         if (vinylAnimator != null && playerManager.isPlaying()) {
             vinylAnimator.start();
         }
+
+        liquidBreathingAnimator = AnimationHelper.createLiquidBreathing(binding.cardArtContainer);
+        if (liquidBreathingAnimator != null && playerManager.isPlaying()) {
+            liquidBreathingAnimator.start();
+        }
     }
 
     private void setupLyricsView() {
@@ -223,6 +229,9 @@ public class NowPlayingActivity extends AppCompatActivity implements MusicPlayer
         if (vinylAnimator != null) {
             vinylAnimator.cancel();
         }
+        if (liquidBreathingAnimator != null) {
+            liquidBreathingAnimator.cancel();
+        }
     }
 
     private void updateUi(Track track) {
@@ -272,6 +281,14 @@ public class NowPlayingActivity extends AppCompatActivity implements MusicPlayer
                 else if (!vinylAnimator.isStarted()) vinylAnimator.start();
             } else {
                 if (vinylAnimator.isRunning()) vinylAnimator.pause();
+            }
+        }
+        if (liquidBreathingAnimator != null) {
+            if (isPlaying) {
+                if (liquidBreathingAnimator.isPaused()) liquidBreathingAnimator.resume();
+                else if (!liquidBreathingAnimator.isStarted()) liquidBreathingAnimator.start();
+            } else {
+                if (liquidBreathingAnimator.isRunning()) liquidBreathingAnimator.pause();
             }
         }
     }

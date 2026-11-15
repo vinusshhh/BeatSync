@@ -23,6 +23,7 @@ public class AdminUserAdapter extends RecyclerView.Adapter<AdminUserAdapter.User
 
     public interface OnUserActionListener {
         void onDeleteUser(User user);
+        void onEditPassword(User user);
     }
 
     public AdminUserAdapter(OnUserActionListener listener) {
@@ -81,6 +82,12 @@ public class AdminUserAdapter extends RecyclerView.Adapter<AdminUserAdapter.User
             }
         });
 
+        holder.btnEditPassword.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onEditPassword(user);
+            }
+        });
+
         // Hide delete button for the primary admin account
         if (user.isAdmin()) {
             holder.btnDelete.setVisibility(View.GONE);
@@ -101,7 +108,7 @@ public class AdminUserAdapter extends RecyclerView.Adapter<AdminUserAdapter.User
 
     static class UserViewHolder extends RecyclerView.ViewHolder {
         TextView tvName, tvEmail, tvPassword, tvTrackCount, tvJoined;
-        ImageView btnToggleEye, btnDelete;
+        ImageView btnToggleEye, btnEditPassword, btnDelete;
 
         UserViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -111,6 +118,7 @@ public class AdminUserAdapter extends RecyclerView.Adapter<AdminUserAdapter.User
             tvTrackCount = itemView.findViewById(R.id.tvUserTrackCount);
             tvJoined = itemView.findViewById(R.id.tvUserJoined);
             btnToggleEye = itemView.findViewById(R.id.btnTogglePasswordEye);
+            btnEditPassword = itemView.findViewById(R.id.btnEditPassword);
             btnDelete = itemView.findViewById(R.id.btnDeleteUser);
         }
     }

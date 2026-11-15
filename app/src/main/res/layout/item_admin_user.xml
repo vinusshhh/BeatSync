@@ -115,6 +115,17 @@
                 android:tint="@color/text_secondary"
                 android:background="?attr/selectableItemBackgroundBorderless"
                 android:contentDescription="Show/Hide Password" />
+
+            <ImageView
+                android:id="@+id/btnEditPassword"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:padding="6dp"
+                android:src="@drawable/ic_lock"
+                android:tint="@color/text_primary"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="Edit User Password"
+                android:layout_marginStart="4dp" />
         </LinearLayout>
 
         <LinearLayout

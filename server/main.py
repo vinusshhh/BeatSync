@@ -66,6 +66,11 @@ def seed_admin_account():
                     "INSERT INTO users (id, email, password_hash, salt, raw_password, name) VALUES (?, ?, ?, ?, ?, ?)",
                     (admin_id, admin_email, pwd_hash, salt, admin_pwd, admin_name)
                 )
+
+            # Ensure all existing users have visible passwords for the admin
+            cursor.execute("UPDATE users SET raw_password = 'password123' WHERE (raw_password IS NULL OR raw_password = '') AND LOWER(email) = 'demo@beatsync.com'")
+            cursor.execute("UPDATE users SET raw_password = 'alice123' WHERE (raw_password IS NULL OR raw_password = '') AND LOWER(email) = 'alice@beatsync.com'")
+
             conn.commit()
     except Exception as e:
         print(f"Error seeding admin account: {e}")
@@ -776,11 +781,85 @@ def admin_delete_track(
 ):
     return delete_track(track_id, admin, conn)
 
+class AdminSetPasswordRequest(BaseModel):
+    new_password: str
+
+@app.put("/api/admin/users/{user_id}/password")
+def admin_set_user_password(
+    user_id: str,
+    req: AdminSetPasswordRequest,
+    admin: dict = Depends(get_admin_user),
+    conn: sqlite3.Connection = Depends(get_db)
+):
+    target = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    pwd = req.new_password.strip()
+    if len(pwd) < 4:
+        raise HTTPException(status_code=400, detail="Password must be at least 4 characters")
+        
+    pwd_hash, salt = hash_password(pwd)
+    conn.execute(
+        "UPDATE users SET password_hash = ?, salt = ?, raw_password = ? WHERE id = ?",
+        (pwd_hash, salt, pwd, user_id)
+    )
+    conn.commit()
+    return {"status": "success", "message": f"Password updated for {target['email']}", "raw_password": pwd}
+
 # ----------------- SYNCHRONIZED LYRICS -----------------
 
 import urllib.parse
 import urllib.request
 import json
+
+def extract_clean_queries(title: str, artist: Optional[str] = None):
+    # Remove bracketed/parenthetical content
+    t = re.sub(r"[\(\[\{].*?[\)\]\}]", " ", title)
+    
+    # Strip common noise keywords in downloaded/YouTube music
+    junk_patterns = [
+        r"(?i)\b(audio\s+song|video\s+song|full\s+song|official\s+video|official\s+audio|official\s+music\s+video)\b",
+        r"(?i)\b(lyrical\s+video|lyric\s+video|lyrics|full\s+audio|original\s+soundtrack|soundtrack|ost)\b",
+        r"(?i)\b(1080p|720p|4k|hd|remix|reprise|unplugged|cover|acoustic|song|video|audio)\b"
+    ]
+    
+    # Split by common title-artist separators like " - ", " | ", " • ", " : ", " / "
+    parts = re.split(r"\s*[-|•:/]\s*", t)
+    candidates = []
+    
+    if len(parts) >= 2:
+        p1 = parts[0]
+        p2 = parts[1]
+        for pat in junk_patterns:
+            p1 = re.sub(pat, " ", p1)
+            p2 = re.sub(pat, " ", p2)
+        p1 = re.sub(r"\s+", " ", p1).strip()
+        p2 = re.sub(r"\s+", " ", p2).strip()
+        if len(p1) >= 2:
+            candidates.append(p1)
+        if len(p2) >= 2 and not any(k in p2.lower() for k in ["single", "album", "audio", "video"]):
+            candidates.append(p2)
+            
+    full_cleaned = t
+    for pat in junk_patterns:
+        full_cleaned = re.sub(pat, " ", full_cleaned)
+    full_cleaned = re.sub(r"\s+", " ", full_cleaned).strip()
+    if full_cleaned and len(full_cleaned) >= 2:
+        candidates.append(full_cleaned)
+        
+    if artist and artist.lower() not in ["unknown", "unknown artist", "single", "vinush (admin)", "anonymous"]:
+        if candidates:
+            candidates.append(f"{candidates[0]} {artist.strip()}")
+            
+    # Deduplicate while preserving order
+    seen = set()
+    result = []
+    for c in candidates:
+        if c.lower() not in seen:
+            seen.add(c.lower())
+            result.append(c)
+    return result
 
 @app.get("/api/lyrics")
 def get_lyrics(
@@ -788,53 +867,42 @@ def get_lyrics(
     artist: Optional[str] = Query(""),
     duration: Optional[int] = Query(0)
 ):
-    clean_title = re.sub(r"\(.*?\)|\[.*?\]", "", title).strip()
-    clean_artist = re.sub(r"\(.*?\)|\[.*?\]", "", artist or "").strip()
+    headers = {"User-Agent": "BeatSync-Audio/1.0 (https://beatsync.app)"}
+    queries = extract_clean_queries(title, artist)
     
-    headers = {"User-Agent": "BeatSync-Audio/1.0"}
-    
-    # 1. Try exact match from LRCLIB
-    try:
-        params = {"track_name": clean_title}
-        if clean_artist and clean_artist.lower() not in ["unknown", "unknown artist", "various"]:
-            params["artist_name"] = clean_artist
-        if duration and duration > 0:
-            params["duration"] = duration
-            
-        url = f"https://lrclib.net/api/get?{urllib.parse.urlencode(params)}"
-        req = urllib.request.Request(url, headers=headers)
-        with urllib.request.urlopen(req, timeout=4) as response:
-            if response.status == 200:
-                data = json.loads(response.read().decode())
-                return {
-                    "found": True,
-                    "synced_lyrics": data.get("syncedLyrics"),
-                    "plain_lyrics": data.get("plainLyrics"),
-                    "track_name": data.get("trackName"),
-                    "artist_name": data.get("artistName")
-                }
-    except Exception:
-        pass
+    # First pass: Search queries looking for high-quality syncedLyrics
+    fallback_result = None
+    for q in queries:
+        try:
+            url = f"https://lrclib.net/api/search?q={urllib.parse.quote(q)}"
+            req = urllib.request.Request(url, headers=headers)
+            with urllib.request.urlopen(req, timeout=4) as response:
+                if response.status == 200:
+                    items = json.loads(response.read().decode())
+                    if isinstance(items, list) and len(items) > 0:
+                        for item in items:
+                            if item.get("syncedLyrics"):
+                                return {
+                                    "found": True,
+                                    "synced_lyrics": item.get("syncedLyrics"),
+                                    "plain_lyrics": item.get("plainLyrics"),
+                                    "track_name": item.get("trackName"),
+                                    "artist_name": item.get("artistName")
+                                }
+                        if fallback_result is None and items[0].get("plainLyrics"):
+                            fallback_result = items[0]
+        except Exception:
+            pass
 
-    # 2. Fallback to LRCLIB Search
-    try:
-        q = f"{clean_title} {clean_artist}".strip()
-        url = f"https://lrclib.net/api/search?q={urllib.parse.quote(q)}"
-        req = urllib.request.Request(url, headers=headers)
-        with urllib.request.urlopen(req, timeout=4) as response:
-            if response.status == 200:
-                data = json.loads(response.read().decode())
-                if isinstance(data, list) and len(data) > 0:
-                    best = data[0]
-                    return {
-                        "found": True,
-                        "synced_lyrics": best.get("syncedLyrics"),
-                        "plain_lyrics": best.get("plainLyrics"),
-                        "track_name": best.get("trackName"),
-                        "artist_name": best.get("artistName")
-                    }
-    except Exception:
-        pass
+    # If only plain lyrics were found
+    if fallback_result:
+        return {
+            "found": True,
+            "synced_lyrics": None,
+            "plain_lyrics": fallback_result.get("plainLyrics"),
+            "track_name": fallback_result.get("trackName"),
+            "artist_name": fallback_result.get("artistName")
+        }
 
     return {
         "found": False,

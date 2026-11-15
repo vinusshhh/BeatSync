@@ -36,10 +36,21 @@ public class UploadFragment extends Fragment {
                     binding.tvAudioFileName.setText(fileName != null ? fileName : "audio_track.mp3");
                     binding.tvAudioFileName.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary));
 
-                    // Auto-fill track title if empty
-                    if (binding.etTrackTitle.getText().toString().trim().isEmpty() && fileName != null) {
+                    // Auto-fill track title and artist intelligently
+                    if (fileName != null) {
                         String cleanName = fileName.replaceAll("\\.[^.]+$", "");
-                        binding.etTrackTitle.setText(cleanName);
+                        String stripped = cleanName.replaceAll("(?i)[\\[\\(].*?[\\]\\)]", " ").trim();
+                        String[] parts = stripped.split("\\s*[-|•:]\\s*");
+                        if (parts.length >= 2) {
+                            String songName = parts[0].replaceAll("(?i)\\b(audio song|video song|full song|official video|official audio|lyrics|remix|hd|4k)\\b", "").replaceAll("\\s+", " ").trim();
+                            String artistName = parts[1].replaceAll("(?i)\\b(audio song|video song|full song|official video|official audio|lyrics|remix|hd|4k)\\b", "").replaceAll("\\s+", " ").trim();
+                            if (!songName.isEmpty()) binding.etTrackTitle.setText(songName);
+                            else binding.etTrackTitle.setText(parts[0].trim());
+                            if (!artistName.isEmpty()) binding.etArtistName.setText(artistName);
+                        } else {
+                            String songName = stripped.replaceAll("(?i)\\b(audio song|video song|full song|official video|official audio|lyrics|remix|hd|4k)\\b", "").replaceAll("\\s+", " ").trim();
+                            binding.etTrackTitle.setText(!songName.isEmpty() ? songName : cleanName);
+                        }
                     }
                 }
             });

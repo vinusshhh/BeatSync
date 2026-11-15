@@ -381,6 +381,30 @@ public class ApiClient {
         });
     }
 
+    public void adminSetUserPassword(String userId, String newPassword, ApiCallback<String> callback) {
+        String json = gson.toJson(new SetPasswordBody(newPassword));
+        RequestBody body = RequestBody.create(json, MediaType.parse("application/json; charset=utf-8"));
+        Request request = newAuthenticatedRequest("/api/admin/users/" + userId + "/password")
+                .put(body)
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                dispatchError(callback, "Network error: " + e.getMessage());
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    dispatchSuccess(callback, "Password updated successfully");
+                } else {
+                    dispatchError(callback, "Failed to update password (" + response.code() + ")");
+                }
+            }
+        });
+    }
+
     public void adminGetAllTracks(ApiCallback<List<Track>> callback) {
         Request request = newAuthenticatedRequest("/api/admin/tracks").get().build();
         Type type = new TypeToken<List<Track>>() {}.getType();
@@ -499,6 +523,10 @@ public class ApiClient {
     private static class ResetPasswordBody {
         String old_password, new_password;
         ResetPasswordBody(String o, String n) { old_password = o; new_password = n; }
+    }
+    private static class SetPasswordBody {
+        String new_password;
+        SetPasswordBody(String n) { new_password = n; }
     }
     private static class CreatePlaylistBody {
         String title, description;

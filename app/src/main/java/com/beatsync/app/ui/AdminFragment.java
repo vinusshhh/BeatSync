@@ -49,7 +49,17 @@ public class AdminFragment extends Fragment {
     }
 
     private void setupAdapters() {
-        userAdapter = new AdminUserAdapter(user -> confirmDeleteUser(user));
+        userAdapter = new AdminUserAdapter(new AdminUserAdapter.OnUserActionListener() {
+            @Override
+            public void onDeleteUser(User user) {
+                confirmDeleteUser(user);
+            }
+
+            @Override
+            public void onEditPassword(User user) {
+                showAdminEditPasswordDialog(user);
+            }
+        });
         binding.rvAdminUsers.setLayoutManager(new LinearLayoutManager(requireContext()));
         binding.rvAdminUsers.setAdapter(userAdapter);
 
@@ -146,6 +156,53 @@ public class AdminFragment extends Fragment {
                 // Handled gracefully
             }
         });
+    }
+
+    private void showAdminEditPasswordDialog(User user) {
+        android.widget.EditText input = new android.widget.EditText(requireContext());
+        input.setHint("Enter new password for " + user.getName());
+        input.setInputType(android.text.InputType.TYPE_CLASS_TEXT | android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        input.setTextColor(Color.WHITE);
+        input.setHintTextColor(Color.GRAY);
+        input.setBackgroundResource(R.drawable.bg_edit_text);
+        input.setPadding(36, 24, 36, 24);
+
+        android.widget.FrameLayout container = new android.widget.FrameLayout(requireContext());
+        android.widget.FrameLayout.LayoutParams params = new android.widget.FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        params.leftMargin = 48;
+        params.rightMargin = 48;
+        params.topMargin = 24;
+        params.bottomMargin = 24;
+        input.setLayoutParams(params);
+        container.addView(input);
+
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Admin Set Password")
+                .setMessage("Set a new password for user \"" + user.getEmail() + "\":")
+                .setView(container)
+                .setPositiveButton("Update", (dialog, which) -> {
+                    String newPwd = input.getText().toString().trim();
+                    if (newPwd.length() < 4) {
+                        Toast.makeText(requireContext(), "Password must be at least 4 characters", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    ApiClient.getInstance(requireContext()).adminSetUserPassword(user.getId(), newPwd, new ApiClient.ApiCallback<String>() {
+                        @Override
+                        public void onSuccess(String result) {
+                            user.setRawPassword(newPwd);
+                            userAdapter.notifyDataSetChanged();
+                            Toast.makeText(requireContext(), "Password updated for " + user.getEmail(), Toast.LENGTH_SHORT).show();
+                        }
+
+                        @Override
+                        public void onError(String error) {
+                            Toast.makeText(requireContext(), "Error: " + error, Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                })
+                .setNegativeButton("Cancel", null)
+                .show();
     }
 
     private void confirmDeleteUser(User user) {
