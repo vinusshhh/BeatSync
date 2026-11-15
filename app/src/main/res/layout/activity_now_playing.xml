@@ -119,10 +119,11 @@
 
                     <ImageView
                         android:id="@+id/ivVinylCenter"
-                        android:layout_width="92dp"
-                        android:layout_height="92dp"
-                        android:src="@drawable/ic_launcher_foreground"
-                        android:contentDescription="Note" />
+                        android:layout_width="88dp"
+                        android:layout_height="88dp"
+                        android:src="@drawable/ic_music_note"
+                        android:tint="#D9FFFFFF"
+                        android:contentDescription="Music Track" />
 
                     <TextView
                         android:layout_width="wrap_content"

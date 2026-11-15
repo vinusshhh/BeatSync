@@ -75,7 +75,12 @@ public class AdminTrackAdapter extends RecyclerView.Adapter<AdminTrackAdapter.Tr
                     : AuthManager.getInstance(context).getBaseUrl() + track.getCoverUrl();
             holder.ivNote.setVisibility(View.GONE);
             holder.ivCover.setVisibility(View.VISIBLE);
-            Glide.with(context).load(fullCover).centerCrop().into(holder.ivCover);
+            Glide.with(context)
+                    .load(fullCover)
+                    .placeholder(R.drawable.bg_default_album_art_small)
+                    .error(R.drawable.bg_default_album_art_small)
+                    .centerCrop()
+                    .into(holder.ivCover);
         } else {
             holder.ivCover.setVisibility(View.GONE);
             holder.ivNote.setVisibility(View.VISIBLE);

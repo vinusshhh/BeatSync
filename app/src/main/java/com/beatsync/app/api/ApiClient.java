@@ -16,6 +16,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
+import java.net.InetAddress;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -33,7 +35,25 @@ public class ApiClient {
 
     private ApiClient(Context context) {
         this.context = context.getApplicationContext();
+
+        Dns customDns = hostname -> {
+            try {
+                return Dns.SYSTEM.lookup(hostname);
+            } catch (Exception e) {
+                if ("beatsync-91vv.onrender.com".equalsIgnoreCase(hostname)) {
+                    List<InetAddress> fallback = new ArrayList<>();
+                    try {
+                        fallback.add(InetAddress.getByAddress(hostname, new byte[]{(byte) 216, 24, 57, 18}));
+                        fallback.add(InetAddress.getByAddress(hostname, new byte[]{(byte) 216, 24, 57, 16}));
+                        return fallback;
+                    } catch (Exception ignored) {}
+                }
+                throw e;
+            }
+        };
+
         this.client = new OkHttpClient.Builder()
+                .dns(customDns)
                 .connectTimeout(30, TimeUnit.SECONDS)
                 .readTimeout(60, TimeUnit.SECONDS)
                 .writeTimeout(60, TimeUnit.SECONDS)
@@ -47,6 +67,10 @@ public class ApiClient {
             instance = new ApiClient(context);
         }
         return instance;
+    }
+
+    public OkHttpClient getClient() {
+        return client;
     }
 
     private String getBaseUrl() {

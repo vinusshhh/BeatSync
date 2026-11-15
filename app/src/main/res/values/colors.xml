@@ -15,6 +15,7 @@
     <color name="text_secondary">#9E9E9E</color>
     <color name="text_tertiary">#5E5E5E</color>
     <color name="text_inverse">#000000</color>
+    <color name="nav_tab_inactive">#B3FFFFFF</color>
     
     <!-- Monochromatic Accents -->
     <color name="accent_primary">#FFFFFF</color>

@@ -115,7 +115,8 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.TrackViewHol
                 binding.ivCover.setVisibility(View.VISIBLE);
                 Glide.with(context)
                         .load(fullCoverUrl)
-                        .placeholder(R.drawable.ic_music_note)
+                        .placeholder(R.drawable.bg_default_album_art_small)
+                        .error(R.drawable.bg_default_album_art_small)
                         .centerCrop()
                         .into(binding.ivCover);
             } else {

@@ -42,6 +42,7 @@ dependencies {
     implementation(libs.androidx.cardview)
     implementation(libs.androidx.swiperefreshlayout)
     implementation(libs.androidx.dynamicanimation)
+    implementation(libs.androidx.media)
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)
     implementation(libs.gson)

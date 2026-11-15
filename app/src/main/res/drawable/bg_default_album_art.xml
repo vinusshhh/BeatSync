@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Dark glass substrate background -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="135"
+                android:startColor="#26263A"
+                android:centerColor="#141422"
+                android:endColor="#0A0A12"
+                android:type="linear" />
+            <corners android:radius="24dp" />
+            <stroke
+                android:width="1.2dp"
+                android:color="#33FFFFFF" />
+        </shape>
+    </item>
+
+    <!-- Centered sleek music note icon -->
+    <item
+        android:width="96dp"
+        android:height="96dp"
+        android:gravity="center"
+        android:drawable="@drawable/ic_music_note" />
+</layer-list>

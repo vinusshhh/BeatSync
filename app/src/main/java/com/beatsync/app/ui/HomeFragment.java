@@ -66,7 +66,13 @@ public class HomeFragment extends Fragment implements MusicPlayerManager.Playbac
         binding.cardFeatured.setOnClickListener(v -> {
             AnimationHelper.rubberPop(binding.cardFeatured);
             if (featuredTrack != null) {
-                MusicPlayerManager.getInstance(requireContext()).playTrack(featuredTrack);
+                List<Track> allTracks = trackAdapter != null ? trackAdapter.getTracks() : null;
+                if (allTracks != null && !allTracks.isEmpty()) {
+                    int idx = allTracks.indexOf(featuredTrack);
+                    MusicPlayerManager.getInstance(requireContext()).setQueue(allTracks, Math.max(0, idx));
+                } else {
+                    MusicPlayerManager.getInstance(requireContext()).playTrack(featuredTrack);
+                }
             }
         });
 
@@ -96,6 +102,9 @@ public class HomeFragment extends Fragment implements MusicPlayerManager.Playbac
             AnimationHelper.animateRubberEntrance(getView());
             if (binding != null && binding.rvTracks != null) {
                 AnimationHelper.animateListItems(binding.rvTracks);
+            }
+            if (trackAdapter == null || trackAdapter.getItemCount() == 0) {
+                loadTracks();
             }
         }
     }

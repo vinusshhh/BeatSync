@@ -5,9 +5,17 @@ import android.media.AudioAttributes;
 import android.media.MediaPlayer;
 import android.os.Handler;
 import android.os.Looper;
+import com.beatsync.app.api.ApiClient;
 import com.beatsync.app.auth.AuthManager;
 import com.beatsync.app.models.Track;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.Request;
+import okhttp3.Response;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -88,6 +96,7 @@ public class MusicPlayerManager {
             if (current != null) {
                 notifyTrackChanged(current);
             }
+            MediaNotificationService.start(context);
         });
 
         mediaPlayer.setOnCompletionListener(mp -> {
@@ -133,24 +142,79 @@ public class MusicPlayerManager {
         if (currentIndex < 0 || currentIndex >= playlistQueue.size()) return;
         Track track = playlistQueue.get(currentIndex);
         notifyTrackChanged(track);
+        MediaNotificationService.start(context);
 
+        // Build streaming url with auth token query param (or direct CDN url)
+        String streamUrl;
+        if (track.getFileUrl() != null && track.getFileUrl().startsWith("http")) {
+            streamUrl = track.getFileUrl();
+        } else {
+            String baseUrl = AuthManager.getInstance(context).getBaseUrl();
+            streamUrl = baseUrl + track.getFileUrl();
+            String token = AuthManager.getInstance(context).getToken();
+            if (token != null) {
+                streamUrl += (streamUrl.contains("?") ? "&" : "?") + "token=" + token;
+            }
+        }
+        final String finalStreamUrl = streamUrl;
+
+        File cacheDir = new File(context.getCacheDir(), "audio_cache");
+        if (!cacheDir.exists()) cacheDir.mkdirs();
+        File localFile = new File(cacheDir, track.getId() + ".mp3");
+
+        if (localFile.exists() && localFile.length() > 5000) {
+            playLocalFile(localFile);
+            return;
+        }
+
+        isPreparing = true;
+        Request request = new Request.Builder().url(finalStreamUrl).build();
+        ApiClient.getInstance(context).getClient().newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                new Handler(Looper.getMainLooper()).post(() -> playDirectStream(finalStreamUrl));
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (!response.isSuccessful() || response.body() == null) {
+                    new Handler(Looper.getMainLooper()).post(() -> playDirectStream(finalStreamUrl));
+                    return;
+                }
+
+                File tempFile = new File(cacheDir, track.getId() + ".tmp");
+                try (InputStream is = response.body().byteStream();
+                     FileOutputStream fos = new FileOutputStream(tempFile)) {
+                    byte[] buffer = new byte[8192];
+                    int read;
+                    while ((read = is.read(buffer)) != -1) {
+                        fos.write(buffer, 0, read);
+                    }
+                    fos.flush();
+                }
+
+                File target = tempFile.renameTo(localFile) ? localFile : tempFile;
+                new Handler(Looper.getMainLooper()).post(() -> playLocalFile(target));
+            }
+        });
+    }
+
+    private void playLocalFile(File file) {
         try {
             isPreparing = true;
             mediaPlayer.reset();
-            
-            // Build streaming url with auth token query param (or direct CDN url)
-            String streamUrl;
-            if (track.getFileUrl() != null && track.getFileUrl().startsWith("http")) {
-                streamUrl = track.getFileUrl();
-            } else {
-                String baseUrl = AuthManager.getInstance(context).getBaseUrl();
-                streamUrl = baseUrl + track.getFileUrl();
-                String token = AuthManager.getInstance(context).getToken();
-                if (token != null) {
-                    streamUrl += (streamUrl.contains("?") ? "&" : "?") + "token=" + token;
-                }
-            }
+            mediaPlayer.setDataSource(file.getAbsolutePath());
+            mediaPlayer.prepareAsync();
+        } catch (IOException | IllegalStateException e) {
+            isPreparing = false;
+            notifyError("Unable to play track: " + e.getMessage());
+        }
+    }
 
+    private void playDirectStream(String streamUrl) {
+        try {
+            isPreparing = true;
+            mediaPlayer.reset();
             mediaPlayer.setDataSource(streamUrl);
             mediaPlayer.prepareAsync();
         } catch (IOException | IllegalStateException e) {
@@ -192,11 +256,10 @@ public class MusicPlayerManager {
         if (currentIndex < playlistQueue.size() - 1) {
             currentIndex++;
             playCurrentIndex();
-        } else if (repeatMode == RepeatMode.ALL) {
+        } else {
+            // Loop back to the first song in the list when reaching the end
             currentIndex = 0;
             playCurrentIndex();
-        } else {
-            notifyState(false);
         }
     }
 

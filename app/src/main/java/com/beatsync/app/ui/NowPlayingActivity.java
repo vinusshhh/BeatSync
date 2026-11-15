@@ -308,7 +308,12 @@ public class NowPlayingActivity extends AppCompatActivity implements MusicPlayer
                     : AuthManager.getInstance(this).getBaseUrl() + track.getCoverUrl();
             binding.layoutDefaultArt.setVisibility(View.GONE);
             binding.ivBigCover.setVisibility(View.VISIBLE);
-            Glide.with(this).load(fullCover).centerCrop().into(binding.ivBigCover);
+            Glide.with(this)
+                    .load(fullCover)
+                    .placeholder(R.drawable.bg_default_album_art)
+                    .error(R.drawable.bg_default_album_art)
+                    .centerCrop()
+                    .into(binding.ivBigCover);
         } else {
             binding.ivBigCover.setVisibility(View.GONE);
             binding.layoutDefaultArt.setVisibility(View.VISIBLE);

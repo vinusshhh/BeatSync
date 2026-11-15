@@ -202,7 +202,7 @@
                     android:layout_width="22dp"
                     android:layout_height="22dp"
                     android:src="@drawable/ic_search"
-                    android:tint="@color/text_tertiary"
+                    android:tint="@color/nav_tab_inactive"
                     android:contentDescription="Search" />
 
                 <TextView
@@ -211,7 +211,7 @@
                     android:layout_height="wrap_content"
                     android:text="Search"
                     android:textSize="10sp"
-                    android:textColor="@color/text_tertiary"
+                    android:textColor="@color/nav_tab_inactive"
                     android:layout_marginTop="3dp" />
             </LinearLayout>
 
@@ -230,7 +230,7 @@
                     android:layout_width="22dp"
                     android:layout_height="22dp"
                     android:src="@drawable/ic_playlist"
-                    android:tint="@color/text_tertiary"
+                    android:tint="@color/nav_tab_inactive"
                     android:contentDescription="Playlists" />
 
                 <TextView
@@ -239,7 +239,7 @@
                     android:layout_height="wrap_content"
                     android:text="Playlists"
                     android:textSize="10sp"
-                    android:textColor="@color/text_tertiary"
+                    android:textColor="@color/nav_tab_inactive"
                     android:layout_marginTop="3dp" />
             </LinearLayout>
 
@@ -258,7 +258,7 @@
                     android:layout_width="22dp"
                     android:layout_height="22dp"
                     android:src="@drawable/ic_upload"
-                    android:tint="@color/text_tertiary"
+                    android:tint="@color/nav_tab_inactive"
                     android:contentDescription="Upload" />
 
                 <TextView
@@ -267,7 +267,7 @@
                     android:layout_height="wrap_content"
                     android:text="Upload"
                     android:textSize="10sp"
-                    android:textColor="@color/text_tertiary"
+                    android:textColor="@color/nav_tab_inactive"
                     android:layout_marginTop="3dp" />
             </LinearLayout>
 
@@ -286,7 +286,7 @@
                     android:layout_width="22dp"
                     android:layout_height="22dp"
                     android:src="@drawable/ic_lock"
-                    android:tint="@color/text_tertiary"
+                    android:tint="@color/nav_tab_inactive"
                     android:contentDescription="Vault" />
 
                 <TextView
@@ -295,7 +295,7 @@
                     android:layout_height="wrap_content"
                     android:text="Vault"
                     android:textSize="10sp"
-                    android:textColor="@color/text_tertiary"
+                    android:textColor="@color/nav_tab_inactive"
                     android:layout_marginTop="3dp" />
             </LinearLayout>
 
@@ -315,7 +315,7 @@
                     android:layout_width="22dp"
                     android:layout_height="22dp"
                     android:src="@drawable/ic_admin_shield"
-                    android:tint="@color/text_tertiary"
+                    android:tint="@color/nav_tab_inactive"
                     android:contentDescription="Admin" />
 
                 <TextView
@@ -324,7 +324,7 @@
                     android:layout_height="wrap_content"
                     android:text="Admin"
                     android:textSize="10sp"
-                    android:textColor="@color/text_tertiary"
+                    android:textColor="@color/nav_tab_inactive"
                     android:layout_marginTop="3dp" />
             </LinearLayout>
 

@@ -42,13 +42,16 @@ public class MainActivity extends AppCompatActivity implements MusicPlayerManage
         getWindow().setStatusBarColor(Color.TRANSPARENT);
         getWindow().setNavigationBarColor(Color.TRANSPARENT);
 
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+            if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 101);
+            }
+        }
+
         androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
             androidx.core.graphics.Insets systemBars = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars());
             binding.fragmentContainer.setPadding(0, systemBars.top, 0, 0);
-            android.view.ViewGroup.MarginLayoutParams lp = (android.view.ViewGroup.MarginLayoutParams) binding.customBottomBar.getLayoutParams();
-            int baseMargin = (int) (12 * getResources().getDisplayMetrics().density);
-            lp.bottomMargin = baseMargin + systemBars.bottom;
-            binding.customBottomBar.setLayoutParams(lp);
+            binding.bottomDock.setPadding(0, 0, 0, systemBars.bottom);
             return insets;
         });
 
@@ -177,7 +180,7 @@ public class MainActivity extends AppCompatActivity implements MusicPlayerManage
     }
 
     private void resetTabStyles() {
-        int inactiveColor = ContextCompat.getColor(this, R.color.text_tertiary);
+        int inactiveColor = ContextCompat.getColor(this, R.color.nav_tab_inactive);
 
         setTabInactive(binding.iconNavHome, binding.labelNavHome, inactiveColor);
         setTabInactive(binding.iconNavSearch, binding.labelNavSearch, inactiveColor);
@@ -189,16 +192,20 @@ public class MainActivity extends AppCompatActivity implements MusicPlayerManage
 
     private void setTabActive(ImageView icon, TextView label, int color) {
         icon.setColorFilter(color);
+        icon.setAlpha(1.0f);
         icon.animate().scaleX(1.1f).scaleY(1.1f).setDuration(120).start();
         label.setTextColor(color);
+        label.setAlpha(1.0f);
         label.setTypeface(null, Typeface.BOLD);
     }
 
     private void setTabInactive(ImageView icon, TextView label, int color) {
         icon.setColorFilter(color);
+        icon.setAlpha(0.85f);
         icon.setScaleX(1.0f);
         icon.setScaleY(1.0f);
         label.setTextColor(color);
+        label.setAlpha(0.85f);
         label.setTypeface(null, Typeface.NORMAL);
     }
 
@@ -245,7 +252,12 @@ public class MainActivity extends AppCompatActivity implements MusicPlayerManage
                     : AuthManager.getInstance(this).getBaseUrl() + track.getCoverUrl();
             binding.miniDefaultNote.setVisibility(View.GONE);
             binding.miniCover.setVisibility(View.VISIBLE);
-            Glide.with(this).load(fullCover).centerCrop().into(binding.miniCover);
+            Glide.with(this)
+                    .load(fullCover)
+                    .placeholder(R.drawable.bg_default_album_art_small)
+                    .error(R.drawable.bg_default_album_art_small)
+                    .centerCrop()
+                    .into(binding.miniCover);
         } else {
             binding.miniCover.setVisibility(View.GONE);
             binding.miniDefaultNote.setVisibility(View.VISIBLE);
