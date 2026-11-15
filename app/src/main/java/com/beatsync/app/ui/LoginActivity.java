@@ -25,6 +25,7 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(binding.getRoot());
 
         binding.btnLogin.setOnClickListener(v -> performLogin());
+        com.beatsync.app.ui.utils.AnimationHelper.addPressScaleEffect(binding.btnLogin);
 
         binding.tvGoToRegister.setOnClickListener(v -> {
             startActivity(new Intent(LoginActivity.this, RegisterActivity.class));

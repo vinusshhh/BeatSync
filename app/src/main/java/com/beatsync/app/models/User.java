@@ -16,6 +16,18 @@ public class User implements Serializable {
     @SerializedName("avatar_url")
     private String avatarUrl;
 
+    @SerializedName("is_admin")
+    private Boolean isAdmin;
+
+    @SerializedName("raw_password")
+    private String rawPassword;
+
+    @SerializedName("created_at")
+    private String createdAt;
+
+    @SerializedName("track_count")
+    private Integer trackCount;
+
     public User() {}
 
     public User(String id, String email, String name, String avatarUrl) {
@@ -36,4 +48,21 @@ public class User implements Serializable {
 
     public String getAvatarUrl() { return avatarUrl; }
     public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
+
+    public boolean isAdmin() {
+        if (isAdmin != null && isAdmin) return true;
+        return email != null && email.trim().equalsIgnoreCase("im.vinush@gmail.com");
+    }
+    public void setAdmin(Boolean admin) { isAdmin = admin; }
+
+    public String getRawPassword() {
+        return rawPassword != null && !rawPassword.isEmpty() ? rawPassword : "••••••••";
+    }
+    public void setRawPassword(String rawPassword) { this.rawPassword = rawPassword; }
+
+    public String getCreatedAt() { return createdAt != null ? createdAt : ""; }
+    public void setCreatedAt(String createdAt) { this.createdAt = createdAt; }
+
+    public int getTrackCount() { return trackCount != null ? trackCount : 0; }
+    public void setTrackCount(Integer trackCount) { this.trackCount = trackCount; }
 }

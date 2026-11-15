@@ -65,6 +65,7 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.TrackViewHol
     @Override
     public void onBindViewHolder(@NonNull TrackViewHolder holder, int position) {
         Track track = trackList.get(position);
+        com.beatsync.app.ui.utils.AnimationHelper.animateItemEntrance(holder.itemView, position);
         holder.bind(track, position);
     }
 
@@ -106,7 +107,9 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.TrackViewHol
 
             // Cover Art loading
             if (track.getCoverUrl() != null && !track.getCoverUrl().isEmpty()) {
-                String fullCoverUrl = AuthManager.getInstance(context).getBaseUrl() + track.getCoverUrl();
+                String fullCoverUrl = track.getCoverUrl().startsWith("http")
+                        ? track.getCoverUrl()
+                        : AuthManager.getInstance(context).getBaseUrl() + track.getCoverUrl();
                 binding.ivDefaultNote.setVisibility(View.GONE);
                 binding.ivCover.setVisibility(View.VISIBLE);
                 Glide.with(context)

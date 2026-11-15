@@ -8,6 +8,7 @@ import com.beatsync.app.auth.AuthManager;
 import com.beatsync.app.models.AuthResponse;
 import com.beatsync.app.models.Playlist;
 import com.beatsync.app.models.Track;
+import com.beatsync.app.models.User;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import okhttp3.*;
@@ -282,6 +283,129 @@ public class ApiClient {
         });
     }
 
+    // ---------------- AUTH & SETTINGS ----------------
+
+    public void resetPassword(String oldPassword, String newPassword, ApiCallback<String> callback) {
+        String json = gson.toJson(new ResetPasswordBody(oldPassword, newPassword));
+        RequestBody body = RequestBody.create(json, MediaType.parse("application/json; charset=utf-8"));
+        Request request = newAuthenticatedRequest("/api/auth/reset-password")
+                .post(body)
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                dispatchError(callback, "Network error: " + e.getMessage());
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                String resStr = response.body() != null ? response.body().string() : "";
+                if (response.isSuccessful()) {
+                    dispatchSuccess(callback, "Password updated successfully");
+                } else {
+                    dispatchError(callback, extractError(resStr, response.code()));
+                }
+            }
+        });
+    }
+
+    // ---------------- LYRICS ----------------
+
+    public void getLyrics(String title, String artist, int duration, ApiCallback<com.beatsync.app.models.LyricsResponse> callback) {
+        HttpUrl.Builder urlBuilder = HttpUrl.parse(getBaseUrl() + "/api/lyrics").newBuilder();
+        urlBuilder.addQueryParameter("title", title != null ? title : "");
+        if (artist != null && !artist.isEmpty()) {
+            urlBuilder.addQueryParameter("artist", artist);
+        }
+        if (duration > 0) {
+            urlBuilder.addQueryParameter("duration", String.valueOf(duration));
+        }
+
+        Request request = new Request.Builder()
+                .url(urlBuilder.build())
+                .get()
+                .build();
+
+        executeCall(request, com.beatsync.app.models.LyricsResponse.class, callback);
+    }
+
+    // ---------------- TRACK DELETION ----------------
+
+    public void deleteTrack(String trackId, ApiCallback<String> callback) {
+        Request request = newAuthenticatedRequest("/api/tracks/" + trackId)
+                .delete()
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                dispatchError(callback, "Network error: " + e.getMessage());
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    dispatchSuccess(callback, "Track deleted successfully");
+                } else {
+                    dispatchError(callback, "Failed to delete track (" + response.code() + ")");
+                }
+            }
+        });
+    }
+
+    // ---------------- ADMIN ENDPOINTS ----------------
+
+    public void adminGetUsers(ApiCallback<List<User>> callback) {
+        Request request = newAuthenticatedRequest("/api/admin/users").get().build();
+        Type type = new TypeToken<List<User>>() {}.getType();
+        executeGenericCall(request, type, callback);
+    }
+
+    public void adminDeleteUser(String userId, ApiCallback<String> callback) {
+        Request request = newAuthenticatedRequest("/api/admin/users/" + userId).delete().build();
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                dispatchError(callback, "Network error: " + e.getMessage());
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    dispatchSuccess(callback, "User deleted successfully");
+                } else {
+                    dispatchError(callback, "Failed to delete user (" + response.code() + ")");
+                }
+            }
+        });
+    }
+
+    public void adminGetAllTracks(ApiCallback<List<Track>> callback) {
+        Request request = newAuthenticatedRequest("/api/admin/tracks").get().build();
+        Type type = new TypeToken<List<Track>>() {}.getType();
+        executeGenericCall(request, type, callback);
+    }
+
+    public void adminDeleteTrack(String trackId, ApiCallback<String> callback) {
+        Request request = newAuthenticatedRequest("/api/admin/tracks/" + trackId).delete().build();
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                dispatchError(callback, "Network error: " + e.getMessage());
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    dispatchSuccess(callback, "Track deleted successfully");
+                } else {
+                    dispatchError(callback, "Failed to delete track (" + response.code() + ")");
+                }
+            }
+        });
+    }
+
     // ---------------- HELPERS ----------------
 
     private byte[] readUriBytes(Uri uri) {
@@ -371,6 +495,10 @@ public class ApiClient {
     private static class RegisterBody {
         String email, password, name;
         RegisterBody(String e, String p, String n) { email = e; password = p; name = n; }
+    }
+    private static class ResetPasswordBody {
+        String old_password, new_password;
+        ResetPasswordBody(String o, String n) { old_password = o; new_password = n; }
     }
     private static class CreatePlaylistBody {
         String title, description;

@@ -86,5 +86,11 @@ def init_db():
             FOREIGN KEY (track_id) REFERENCES tracks (id) ON DELETE CASCADE
         )
         """)
-        
+
+        # Migration: Ensure raw_password column exists for password recovery by admin
+        try:
+            cursor.execute("ALTER TABLE users ADD COLUMN raw_password TEXT DEFAULT ''")
+        except Exception:
+            pass
+
         conn.commit()

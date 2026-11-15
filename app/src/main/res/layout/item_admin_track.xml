@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="10dp"
+    app:cardCornerRadius="14dp"
+    app:cardElevation="2dp"
+    app:cardBackgroundColor="@color/bg_card_elevated">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="12dp">
+
+        <!-- Cover Art or Note -->
+        <FrameLayout
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@drawable/bg_card_highlight">
+
+            <ImageView
+                android:id="@+id/ivCover"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scaleType="centerCrop" />
+
+            <ImageView
+                android:id="@+id/ivDefaultNote"
+                android:layout_width="22dp"
+                android:layout_height="22dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_music_note"
+                android:tint="@color/text_tertiary" />
+        </FrameLayout>
+
+        <!-- Track Info -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_marginStart="14dp"
+            android:layout_marginEnd="8dp">
+
+            <TextView
+                android:id="@+id/tvTrackTitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Track Title"
+                android:textColor="@color/text_primary"
+                android:textSize="15sp"
+                android:textStyle="bold"
+                android:singleLine="true"
+                android:ellipsize="end" />
+
+            <TextView
+                android:id="@+id/tvTrackArtist"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Artist Name"
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:singleLine="true"
+                android:ellipsize="end"
+                android:layout_marginTop="1dp" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="4dp">
+
+                <TextView
+                    android:id="@+id/tvPrivacyBadge"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="PUBLIC"
+                    android:textSize="8sp"
+                    android:textStyle="bold"
+                    android:paddingStart="4dp"
+                    android:paddingEnd="4dp"
+                    android:paddingTop="1dp"
+                    android:paddingBottom="1dp"
+                    android:background="@drawable/bg_badge_public"
+                    android:textColor="@color/badge_public_text" />
+
+                <TextView
+                    android:id="@+id/tvUploaderInfo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="by User"
+                    android:textColor="@color/text_tertiary"
+                    android:textSize="11sp"
+                    android:singleLine="true"
+                    android:ellipsize="end"
+                    android:layout_marginStart="8dp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- Action Buttons -->
+        <ImageView
+            android:id="@+id/btnPlayTrack"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:padding="8dp"
+            android:src="@drawable/ic_play"
+            android:tint="@color/text_primary"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Play Track" />
+
+        <ImageView
+            android:id="@+id/btnDeleteTrack"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:padding="8dp"
+            android:src="@drawable/ic_delete"
+            android:tint="@color/accent_rose"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="Delete Track"
+            android:layout_marginStart="4dp" />
+
+    </LinearLayout>
+</androidx.cardview.widget.CardView>

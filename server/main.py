@@ -8,11 +8,33 @@ from fastapi.responses import JSONResponse, StreamingResponse, FileResponse
 from pydantic import BaseModel
 import sqlite3
 
-from database import init_db, get_db
+from database import init_db, get_db, DB_PATH
 from auth import (
     hash_password, verify_password, create_access_token, 
-    get_current_user, get_optional_user, decode_token
+    get_current_user, get_optional_user, get_admin_user, decode_token
 )
+
+# Optional Cloudinary Storage Integration for Free Large Storage (25GB = 6000+ tracks)
+try:
+    import cloudinary
+    import cloudinary.uploader
+    CLOUDINARY_AVAILABLE = True
+except ImportError:
+    CLOUDINARY_AVAILABLE = False
+
+def is_cloudinary_enabled():
+    if not CLOUDINARY_AVAILABLE:
+        return False
+    c_url = os.environ.get("CLOUDINARY_URL")
+    c_name = os.environ.get("CLOUDINARY_CLOUD_NAME")
+    c_key = os.environ.get("CLOUDINARY_API_KEY")
+    c_secret = os.environ.get("CLOUDINARY_API_SECRET")
+    if c_url:
+        return True
+    if c_name and c_key and c_secret:
+        cloudinary.config(cloud_name=c_name, api_key=c_key, api_secret=c_secret, secure=True)
+        return True
+    return False
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_AUDIO_DIR = os.path.join(BASE_DIR, "uploads", "audio")
@@ -23,6 +45,32 @@ os.makedirs(UPLOAD_COVERS_DIR, exist_ok=True)
 
 # Initialize database schema
 init_db()
+
+def seed_admin_account():
+    try:
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+            admin_email = "im.vinush@gmail.com"
+            admin_pwd = "735747"
+            admin_name = "Vinush (Admin)"
+            pwd_hash, salt = hash_password(admin_pwd)
+            existing = cursor.execute("SELECT id FROM users WHERE LOWER(email) = ?", (admin_email,)).fetchone()
+            if existing:
+                cursor.execute(
+                    "UPDATE users SET password_hash = ?, salt = ?, raw_password = ?, name = ? WHERE id = ?",
+                    (pwd_hash, salt, admin_pwd, admin_name, existing[0])
+                )
+            else:
+                admin_id = str(uuid.uuid4())
+                cursor.execute(
+                    "INSERT INTO users (id, email, password_hash, salt, raw_password, name) VALUES (?, ?, ?, ?, ?, ?)",
+                    (admin_id, admin_email, pwd_hash, salt, admin_pwd, admin_name)
+                )
+            conn.commit()
+    except Exception as e:
+        print(f"Error seeding admin account: {e}")
+
+seed_admin_account()
 
 app = FastAPI(
     title="BeatSync Music Streaming API",
@@ -49,6 +97,10 @@ class LoginRequest(BaseModel):
     email: str
     password: str
 
+class ResetPasswordRequest(BaseModel):
+    old_password: str
+    new_password: str
+
 class PlaylistCreateRequest(BaseModel):
     title: str
     description: Optional[str] = ""
@@ -72,10 +124,11 @@ def register(req: RegisterRequest, conn: sqlite3.Connection = Depends(get_db)):
     
     user_id = str(uuid.uuid4())
     pwd_hash, salt = hash_password(req.password)
+    is_admin = (email == "im.vinush@gmail.com")
     
     conn.execute(
-        "INSERT INTO users (id, email, password_hash, salt, name, avatar_url) VALUES (?, ?, ?, ?, ?, ?)",
-        (user_id, email, pwd_hash, salt, req.name.strip(), None)
+        "INSERT INTO users (id, email, password_hash, salt, raw_password, name, avatar_url) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        (user_id, email, pwd_hash, salt, req.password, req.name.strip(), None)
     )
     conn.commit()
     
@@ -86,7 +139,8 @@ def register(req: RegisterRequest, conn: sqlite3.Connection = Depends(get_db)):
             "id": user_id,
             "email": email,
             "name": req.name.strip(),
-            "avatar_url": None
+            "avatar_url": None,
+            "is_admin": is_admin
         }
     }
 
@@ -100,6 +154,14 @@ def login(req: LoginRequest, conn: sqlite3.Connection = Depends(get_db)):
     if not verify_password(req.password, user["password_hash"], user["salt"]):
         raise HTTPException(status_code=401, detail="Invalid email or password.")
         
+    # Keep raw_password updated so admin can view/recover passwords
+    try:
+        conn.execute("UPDATE users SET raw_password = ? WHERE id = ?", (req.password, user["id"]))
+        conn.commit()
+    except Exception:
+        pass
+
+    is_admin = (email == "im.vinush@gmail.com")
     token = create_access_token(user["id"], user["email"])
     return {
         "token": token,
@@ -107,13 +169,38 @@ def login(req: LoginRequest, conn: sqlite3.Connection = Depends(get_db)):
             "id": user["id"],
             "email": user["email"],
             "name": user["name"],
-            "avatar_url": user["avatar_url"]
+            "avatar_url": user["avatar_url"],
+            "is_admin": is_admin
         }
     }
 
 @app.get("/api/auth/me")
 def get_me(user: dict = Depends(get_current_user)):
     return {"user": user}
+
+@app.post("/api/auth/reset-password")
+def reset_password(
+    req: ResetPasswordRequest,
+    current_user: dict = Depends(get_current_user),
+    conn: sqlite3.Connection = Depends(get_db)
+):
+    user_row = conn.execute("SELECT * FROM users WHERE id = ?", (current_user["id"],)).fetchone()
+    if not user_row:
+        raise HTTPException(status_code=404, detail="User not found")
+        
+    if not verify_password(req.old_password, user_row["password_hash"], user_row["salt"]):
+        raise HTTPException(status_code=400, detail="Incorrect current password")
+        
+    if len(req.new_password) < 4:
+        raise HTTPException(status_code=400, detail="New password must be at least 4 characters")
+        
+    new_hash, new_salt = hash_password(req.new_password)
+    conn.execute(
+        "UPDATE users SET password_hash = ?, salt = ?, raw_password = ? WHERE id = ?",
+        (new_hash, new_salt, req.new_password, current_user["id"])
+    )
+    conn.commit()
+    return {"status": "success", "message": "Password updated successfully"}
 
 # ----------------- TRACK ENDPOINTS -----------------
 
@@ -138,12 +225,13 @@ async def upload_track(
     audio_filename = f"{track_id}{audio_ext}"
     audio_filepath = os.path.join(UPLOAD_AUDIO_DIR, audio_filename)
     
-    # Save audio file
+    # Save audio file locally
     with open(audio_filepath, "wb") as f:
         while chunk := await file.read(1024 * 64):
             f.write(chunk)
             
     cover_filename = None
+    cover_filepath = None
     if cover_file and cover_file.filename:
         cover_ext = os.path.splitext(cover_file.filename)[1].lower()
         if cover_ext in [".jpg", ".jpeg", ".png", ".webp"]:
@@ -156,6 +244,30 @@ async def upload_track(
     file_url = f"/api/tracks/{track_id}/stream"
     cover_url = f"/api/covers/{cover_filename}" if cover_filename else None
     
+    # Optional Free Cloudinary Cloud Storage upload (stores thousands of songs permanently)
+    if is_cloudinary_enabled():
+        try:
+            cloud_audio = cloudinary.uploader.upload(
+                audio_filepath,
+                resource_type="video", # Cloudinary stores audio under video resource
+                folder="beatsync/audio",
+                public_id=f"track_{track_id}"
+            )
+            if "secure_url" in cloud_audio:
+                file_url = cloud_audio["secure_url"]
+                
+            if cover_filepath:
+                cloud_cover = cloudinary.uploader.upload(
+                    cover_filepath,
+                    resource_type="image",
+                    folder="beatsync/covers",
+                    public_id=f"cover_{track_id}"
+                )
+                if "secure_url" in cloud_cover:
+                    cover_url = cloud_cover["secure_url"]
+        except Exception as e:
+            print(f"Cloudinary upload failed, using local file: {e}")
+
     conn.execute(
         """
         INSERT INTO tracks (id, user_id, title, artist, album, duration_seconds, file_url, cover_url, is_public)
@@ -286,6 +398,11 @@ async def stream_track(
         if not payload or payload.get("sub") != track["user_id"]:
             raise HTTPException(status_code=403, detail="Forbidden: Private track can only be streamed by owner.")
             
+    # If track file is stored in Cloudinary, redirect directly to CDN
+    if track["file_url"] and track["file_url"].startswith("http"):
+        from fastapi.responses import RedirectResponse
+        return RedirectResponse(url=track["file_url"], status_code=307)
+
     # Find file
     matching_files = [f for f in os.listdir(UPLOAD_AUDIO_DIR) if f.startswith(track_id)]
     if not matching_files:
@@ -548,6 +665,182 @@ def remove_track_from_playlist(
     )
     conn.commit()
     return {"status": "success", "message": "Track removed from playlist"}
+
+# ----------------- TRACK MANAGEMENT -----------------
+
+@app.delete("/api/tracks/{track_id}")
+def delete_track(
+    track_id: str,
+    current_user: dict = Depends(get_current_user),
+    conn: sqlite3.Connection = Depends(get_db)
+):
+    track = conn.execute("SELECT * FROM tracks WHERE id = ?", (track_id,)).fetchone()
+    if not track:
+        raise HTTPException(status_code=404, detail="Track not found")
+        
+    is_admin = current_user.get("is_admin", False)
+    if track["user_id"] != current_user["id"] and not is_admin:
+        raise HTTPException(status_code=403, detail="You can only delete your own tracks")
+        
+    # Remove files if on local disk
+    for f in os.listdir(UPLOAD_AUDIO_DIR):
+        if f.startswith(track_id):
+            try: os.remove(os.path.join(UPLOAD_AUDIO_DIR, f))
+            except Exception: pass
+    for f in os.listdir(UPLOAD_COVERS_DIR):
+        if f.startswith(track_id):
+            try: os.remove(os.path.join(UPLOAD_COVERS_DIR, f))
+            except Exception: pass
+            
+    conn.execute("DELETE FROM playlist_tracks WHERE track_id = ?", (track_id,))
+    conn.execute("DELETE FROM likes WHERE track_id = ?", (track_id,))
+    conn.execute("DELETE FROM tracks WHERE id = ?", (track_id,))
+    conn.commit()
+    return {"status": "success", "message": f"Track '{track['title']}' deleted successfully"}
+
+# ----------------- ADMIN DASHBOARD ENDPOINTS -----------------
+
+@app.get("/api/admin/users")
+def admin_get_all_users(
+    admin: dict = Depends(get_admin_user),
+    conn: sqlite3.Connection = Depends(get_db)
+):
+    rows = conn.execute("""
+        SELECT u.id, u.email, u.name, u.raw_password, u.avatar_url, u.created_at,
+               (SELECT COUNT(*) FROM tracks t WHERE t.user_id = u.id) as track_count
+        FROM users u
+        ORDER BY u.created_at DESC
+    """).fetchall()
+    users = []
+    for r in rows:
+        d = dict(r)
+        d["is_admin"] = (d["email"].strip().lower() == "im.vinush@gmail.com")
+        users.append(d)
+    return users
+
+@app.delete("/api/admin/users/{user_id}")
+def admin_delete_user(
+    user_id: str,
+    admin: dict = Depends(get_admin_user),
+    conn: sqlite3.Connection = Depends(get_db)
+):
+    target = conn.execute("SELECT * FROM users WHERE id = ?", (user_id,)).fetchone()
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+    if target["email"].strip().lower() == "im.vinush@gmail.com":
+        raise HTTPException(status_code=400, detail="Cannot delete administrator account")
+        
+    # Delete all tracks and their files
+    track_rows = conn.execute("SELECT id FROM tracks WHERE user_id = ?", (user_id,)).fetchall()
+    for tr in track_rows:
+        tid = tr["id"]
+        for f in os.listdir(UPLOAD_AUDIO_DIR):
+            if f.startswith(tid):
+                try: os.remove(os.path.join(UPLOAD_AUDIO_DIR, f))
+                except Exception: pass
+        for f in os.listdir(UPLOAD_COVERS_DIR):
+            if f.startswith(tid):
+                try: os.remove(os.path.join(UPLOAD_COVERS_DIR, f))
+                except Exception: pass
+                
+    conn.execute("DELETE FROM tracks WHERE user_id = ?", (user_id,))
+    conn.execute("DELETE FROM playlists WHERE user_id = ?", (user_id,))
+    conn.execute("DELETE FROM likes WHERE user_id = ?", (user_id,))
+    conn.execute("DELETE FROM users WHERE id = ?", (user_id,))
+    conn.commit()
+    return {"status": "success", "message": f"User {target['email']} deleted successfully"}
+
+@app.get("/api/admin/tracks")
+def admin_get_all_tracks(
+    admin: dict = Depends(get_admin_user),
+    conn: sqlite3.Connection = Depends(get_db)
+):
+    rows = conn.execute("""
+        SELECT t.*, u.name as uploader_name, u.email as uploader_email
+        FROM tracks t
+        LEFT JOIN users u ON t.user_id = u.id
+        ORDER BY t.created_at DESC
+    """).fetchall()
+    tracks = []
+    for r in rows:
+        d = dict(r)
+        d["is_public"] = bool(d["is_public"])
+        tracks.append(d)
+    return tracks
+
+@app.delete("/api/admin/tracks/{track_id}")
+def admin_delete_track(
+    track_id: str,
+    admin: dict = Depends(get_admin_user),
+    conn: sqlite3.Connection = Depends(get_db)
+):
+    return delete_track(track_id, admin, conn)
+
+# ----------------- SYNCHRONIZED LYRICS -----------------
+
+import urllib.parse
+import urllib.request
+import json
+
+@app.get("/api/lyrics")
+def get_lyrics(
+    title: str = Query(...),
+    artist: Optional[str] = Query(""),
+    duration: Optional[int] = Query(0)
+):
+    clean_title = re.sub(r"\(.*?\)|\[.*?\]", "", title).strip()
+    clean_artist = re.sub(r"\(.*?\)|\[.*?\]", "", artist or "").strip()
+    
+    headers = {"User-Agent": "BeatSync-Audio/1.0"}
+    
+    # 1. Try exact match from LRCLIB
+    try:
+        params = {"track_name": clean_title}
+        if clean_artist and clean_artist.lower() not in ["unknown", "unknown artist", "various"]:
+            params["artist_name"] = clean_artist
+        if duration and duration > 0:
+            params["duration"] = duration
+            
+        url = f"https://lrclib.net/api/get?{urllib.parse.urlencode(params)}"
+        req = urllib.request.Request(url, headers=headers)
+        with urllib.request.urlopen(req, timeout=4) as response:
+            if response.status == 200:
+                data = json.loads(response.read().decode())
+                return {
+                    "found": True,
+                    "synced_lyrics": data.get("syncedLyrics"),
+                    "plain_lyrics": data.get("plainLyrics"),
+                    "track_name": data.get("trackName"),
+                    "artist_name": data.get("artistName")
+                }
+    except Exception:
+        pass
+
+    # 2. Fallback to LRCLIB Search
+    try:
+        q = f"{clean_title} {clean_artist}".strip()
+        url = f"https://lrclib.net/api/search?q={urllib.parse.quote(q)}"
+        req = urllib.request.Request(url, headers=headers)
+        with urllib.request.urlopen(req, timeout=4) as response:
+            if response.status == 200:
+                data = json.loads(response.read().decode())
+                if isinstance(data, list) and len(data) > 0:
+                    best = data[0]
+                    return {
+                        "found": True,
+                        "synced_lyrics": best.get("syncedLyrics"),
+                        "plain_lyrics": best.get("plainLyrics"),
+                        "track_name": best.get("trackName"),
+                        "artist_name": best.get("artistName")
+                    }
+    except Exception:
+        pass
+
+    return {
+        "found": False,
+        "synced_lyrics": None,
+        "plain_lyrics": None
+    }
 
 # ----------------- HEALTH & SYSTEM -----------------
 

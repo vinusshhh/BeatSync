@@ -1,5 +1,6 @@
 package com.beatsync.app.ui;
 
+import android.animation.ObjectAnimator;
 import android.app.AlertDialog;
 import android.os.Bundle;
 import android.view.View;
@@ -15,10 +16,14 @@ import com.beatsync.app.R;
 import com.beatsync.app.api.ApiClient;
 import com.beatsync.app.auth.AuthManager;
 import com.beatsync.app.databinding.ActivityNowPlayingBinding;
+import com.beatsync.app.models.LyricsResponse;
+import com.beatsync.app.models.LyricsResponse.LyricLine;
 import com.beatsync.app.models.Playlist;
 import com.beatsync.app.models.Track;
 import com.beatsync.app.player.MusicPlayerManager;
+import com.beatsync.app.ui.adapters.LyricsAdapter;
 import com.beatsync.app.ui.adapters.PlaylistAdapter;
+import com.beatsync.app.ui.utils.AnimationHelper;
 import com.bumptech.glide.Glide;
 import java.util.List;
 import java.util.Locale;
@@ -27,7 +32,11 @@ public class NowPlayingActivity extends AppCompatActivity implements MusicPlayer
 
     private ActivityNowPlayingBinding binding;
     private MusicPlayerManager playerManager;
+    private LyricsAdapter lyricsAdapter;
+    private ObjectAnimator vinylAnimator;
     private boolean isUserSeeking = false;
+    private boolean isLyricsMode = false;
+    private String currentLyricsTrackId = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,8 +46,10 @@ public class NowPlayingActivity extends AppCompatActivity implements MusicPlayer
 
         playerManager = MusicPlayerManager.getInstance(this);
 
-        binding.btnCollapse.setOnClickListener(v -> finish());
+        setupAestheticsAndAnimations();
+        setupLyricsView();
 
+        binding.btnCollapse.setOnClickListener(v -> finish());
         binding.btnPlayPauseContainer.setOnClickListener(v -> playerManager.togglePlayPause());
         binding.btnNext.setOnClickListener(v -> playerManager.playNext());
         binding.btnPrevious.setOnClickListener(v -> playerManager.playPrevious());
@@ -79,6 +90,8 @@ public class NowPlayingActivity extends AppCompatActivity implements MusicPlayer
             }
         });
 
+        binding.btnToggleLyrics.setOnClickListener(v -> toggleLyricsView());
+
         binding.seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
@@ -117,10 +130,99 @@ public class NowPlayingActivity extends AppCompatActivity implements MusicPlayer
         }
     }
 
+    private void setupAestheticsAndAnimations() {
+        AnimationHelper.addPressScaleEffect(binding.btnPlayPauseContainer);
+        AnimationHelper.addPressScaleEffect(binding.btnNext);
+        AnimationHelper.addPressScaleEffect(binding.btnPrevious);
+        AnimationHelper.addPressScaleEffect(binding.btnShuffle);
+        AnimationHelper.addPressScaleEffect(binding.btnRepeat);
+        AnimationHelper.addPressScaleEffect(binding.btnLike);
+        AnimationHelper.addPressScaleEffect(binding.btnAddToPlaylist);
+        AnimationHelper.addPressScaleEffect(binding.btnToggleLyrics);
+
+        vinylAnimator = AnimationHelper.createContinuousRotation(binding.ivVinylCenter, 24000);
+        if (vinylAnimator != null && playerManager.isPlaying()) {
+            vinylAnimator.start();
+        }
+    }
+
+    private void setupLyricsView() {
+        lyricsAdapter = new LyricsAdapter();
+        binding.rvLyrics.setLayoutManager(new LinearLayoutManager(this));
+        binding.rvLyrics.setAdapter(lyricsAdapter);
+
+        lyricsAdapter.setOnLineClickListener(line -> {
+            playerManager.seekTo((int) line.getTimeMs());
+            Toast.makeText(this, "Jumped to " + formatTime((int) line.getTimeMs()), Toast.LENGTH_SHORT).show();
+        });
+    }
+
+    private void toggleLyricsView() {
+        isLyricsMode = !isLyricsMode;
+        if (isLyricsMode) {
+            binding.cardArtContainer.setVisibility(View.GONE);
+            binding.layoutLyricsContainer.setVisibility(View.VISIBLE);
+            binding.btnToggleLyrics.setColorFilter(ContextCompat.getColor(this, R.color.accent_cyan));
+        } else {
+            binding.layoutLyricsContainer.setVisibility(View.GONE);
+            binding.cardArtContainer.setVisibility(View.VISIBLE);
+            binding.btnToggleLyrics.setColorFilter(ContextCompat.getColor(this, R.color.text_primary));
+        }
+    }
+
+    private void fetchLyrics(Track track) {
+        if (track == null) return;
+        if (track.getId().equals(currentLyricsTrackId)) return;
+
+        currentLyricsTrackId = track.getId();
+        binding.pbLyricsLoading.setVisibility(View.VISIBLE);
+        binding.tvLyricsEmpty.setVisibility(View.GONE);
+
+        ApiClient.getInstance(this).getLyrics(track.getTitle(), track.getArtist(), track.getDurationSeconds(), new ApiClient.ApiCallback<LyricsResponse>() {
+            @Override
+            public void onSuccess(LyricsResponse response) {
+                binding.pbLyricsLoading.setVisibility(View.GONE);
+                if (response != null && response.isFound()) {
+                    List<LyricLine> lines = response.getParsedLines();
+                    if (!lines.isEmpty()) {
+                        lyricsAdapter.setLines(lines);
+                        binding.tvLyricsEmpty.setVisibility(View.GONE);
+                        binding.rvLyrics.setVisibility(View.VISIBLE);
+                    } else if (response.getPlainLyrics() != null && !response.getPlainLyrics().isEmpty()) {
+                        binding.tvLyricsEmpty.setText(response.getPlainLyrics());
+                        binding.tvLyricsEmpty.setVisibility(View.VISIBLE);
+                        binding.rvLyrics.setVisibility(View.GONE);
+                    } else {
+                        binding.tvLyricsEmpty.setText("No synchronized lyrics available for this track.");
+                        binding.tvLyricsEmpty.setVisibility(View.VISIBLE);
+                        binding.rvLyrics.setVisibility(View.GONE);
+                    }
+                } else {
+                    lyricsAdapter.setLines(null);
+                    binding.tvLyricsEmpty.setText("No lyrics found for \"" + track.getTitle() + "\".");
+                    binding.tvLyricsEmpty.setVisibility(View.VISIBLE);
+                    binding.rvLyrics.setVisibility(View.GONE);
+                }
+            }
+
+            @Override
+            public void onError(String error) {
+                binding.pbLyricsLoading.setVisibility(View.GONE);
+                lyricsAdapter.setLines(null);
+                binding.tvLyricsEmpty.setText("Lyrics search unavailable");
+                binding.tvLyricsEmpty.setVisibility(View.VISIBLE);
+                binding.rvLyrics.setVisibility(View.GONE);
+            }
+        });
+    }
+
     @Override
     protected void onDestroy() {
         super.onDestroy();
         playerManager.removeListener(this);
+        if (vinylAnimator != null) {
+            vinylAnimator.cancel();
+        }
     }
 
     private void updateUi(Track track) {
@@ -142,7 +244,9 @@ public class NowPlayingActivity extends AppCompatActivity implements MusicPlayer
 
         // Cover Art
         if (track.getCoverUrl() != null && !track.getCoverUrl().isEmpty()) {
-            String fullCover = AuthManager.getInstance(this).getBaseUrl() + track.getCoverUrl();
+            String fullCover = track.getCoverUrl().startsWith("http")
+                    ? track.getCoverUrl()
+                    : AuthManager.getInstance(this).getBaseUrl() + track.getCoverUrl();
             binding.layoutDefaultArt.setVisibility(View.GONE);
             binding.ivBigCover.setVisibility(View.VISIBLE);
             Glide.with(this).load(fullCover).centerCrop().into(binding.ivBigCover);
@@ -155,10 +259,21 @@ public class NowPlayingActivity extends AppCompatActivity implements MusicPlayer
         updateShuffleButton();
         updateRepeatButton();
         updateLikeButton(track.isLiked());
+
+        // Load Synced Lyrics
+        fetchLyrics(track);
     }
 
     private void updatePlayPauseButton(boolean isPlaying) {
         binding.btnPlayPause.setImageResource(isPlaying ? R.drawable.ic_pause : R.drawable.ic_play);
+        if (vinylAnimator != null) {
+            if (isPlaying) {
+                if (vinylAnimator.isPaused()) vinylAnimator.resume();
+                else if (!vinylAnimator.isStarted()) vinylAnimator.start();
+            } else {
+                if (vinylAnimator.isRunning()) vinylAnimator.pause();
+            }
+        }
     }
 
     private void updateShuffleButton() {
@@ -171,10 +286,7 @@ public class NowPlayingActivity extends AppCompatActivity implements MusicPlayer
         if (mode == MusicPlayerManager.RepeatMode.OFF) {
             binding.btnRepeat.setColorFilter(ContextCompat.getColor(this, R.color.text_tertiary));
             binding.btnRepeat.setImageResource(R.drawable.ic_repeat);
-        } else if (mode == MusicPlayerManager.RepeatMode.ALL) {
-            binding.btnRepeat.setColorFilter(ContextCompat.getColor(this, R.color.accent_cyan));
-            binding.btnRepeat.setImageResource(R.drawable.ic_repeat);
-        } else { // ONE
+        } else {
             binding.btnRepeat.setColorFilter(ContextCompat.getColor(this, R.color.accent_cyan));
             binding.btnRepeat.setImageResource(R.drawable.ic_repeat);
         }
@@ -274,6 +386,26 @@ public class NowPlayingActivity extends AppCompatActivity implements MusicPlayer
             if (totalMs > 0) {
                 int progress = (int) (((long) currentMs * 1000) / totalMs);
                 binding.seekBar.setProgress(progress);
+            }
+        }
+
+        // Synchronize Active Lyric Line
+        if (lyricsAdapter != null && lyricsAdapter.getLineCount() > 0) {
+            int lineCount = lyricsAdapter.getLineCount();
+            int matchedIndex = -1;
+
+            for (int i = 0; i < lineCount; i++) {
+                LyricLine line = lyricsAdapter.getLine(i);
+                long nextTime = (i + 1 < lineCount) ? lyricsAdapter.getLine(i + 1).getTimeMs() : Long.MAX_VALUE;
+                if (currentMs >= line.getTimeMs() && currentMs < nextTime) {
+                    matchedIndex = i;
+                    break;
+                }
+            }
+
+            if (matchedIndex != -1 && lyricsAdapter.getActivePosition() != matchedIndex) {
+                lyricsAdapter.setActivePosition(matchedIndex);
+                binding.rvLyrics.smoothScrollToPosition(matchedIndex);
             }
         }
     }

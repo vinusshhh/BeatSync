@@ -84,9 +84,11 @@ def get_optional_user(authorization: Optional[str] = Header(None), token: Option
     conn_gen = get_db()
     conn = next(conn_gen)
     try:
-        user = conn.execute("SELECT id, email, name, avatar_url FROM users WHERE id = ?", (payload["sub"],)).fetchone()
+        user = conn.execute("SELECT id, email, name, avatar_url, raw_password FROM users WHERE id = ?", (payload["sub"],)).fetchone()
         if user:
-            return dict(user)
+            d = dict(user)
+            d["is_admin"] = (d["email"].strip().lower() == "im.vinush@gmail.com")
+            return d
         return None
     finally:
         conn.close()
@@ -108,12 +110,22 @@ def get_current_user(authorization: Optional[str] = Header(None)):
     conn_gen = get_db()
     conn = next(conn_gen)
     try:
-        user = conn.execute("SELECT id, email, name, avatar_url FROM users WHERE id = ?", (payload["sub"],)).fetchone()
+        user = conn.execute("SELECT id, email, name, avatar_url, raw_password FROM users WHERE id = ?", (payload["sub"],)).fetchone()
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="User not found"
             )
-        return dict(user)
+        d = dict(user)
+        d["is_admin"] = (d["email"].strip().lower() == "im.vinush@gmail.com")
+        return d
     finally:
         conn.close()
+
+def get_admin_user(current_user: dict = Depends(get_current_user)):
+    if not current_user.get("is_admin", False):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden: Admin privileges required."
+        )
+    return current_user

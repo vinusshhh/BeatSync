@@ -53,6 +53,11 @@ public class AuthManager {
         return getToken() != null && getUser() != null;
     }
 
+    public boolean isAdmin() {
+        User u = getUser();
+        return u != null && u.isAdmin();
+    }
+
     public void logout() {
         prefs.edit()
                 .remove(KEY_TOKEN)

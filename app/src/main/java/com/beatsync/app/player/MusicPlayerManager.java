@@ -138,12 +138,17 @@ public class MusicPlayerManager {
             isPreparing = true;
             mediaPlayer.reset();
             
-            // Build streaming url with auth token query param
-            String baseUrl = AuthManager.getInstance(context).getBaseUrl();
-            String streamUrl = baseUrl + track.getFileUrl();
-            String token = AuthManager.getInstance(context).getToken();
-            if (token != null) {
-                streamUrl += (streamUrl.contains("?") ? "&" : "?") + "token=" + token;
+            // Build streaming url with auth token query param (or direct CDN url)
+            String streamUrl;
+            if (track.getFileUrl() != null && track.getFileUrl().startsWith("http")) {
+                streamUrl = track.getFileUrl();
+            } else {
+                String baseUrl = AuthManager.getInstance(context).getBaseUrl();
+                streamUrl = baseUrl + track.getFileUrl();
+                String token = AuthManager.getInstance(context).getToken();
+                if (token != null) {
+                    streamUrl += (streamUrl.contains("?") ? "&" : "?") + "token=" + token;
+                }
             }
 
             mediaPlayer.setDataSource(streamUrl);

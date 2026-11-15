@@ -20,6 +20,7 @@ public class MainActivity extends AppCompatActivity implements MusicPlayerManage
     private final PlaylistsFragment playlistsFragment = new PlaylistsFragment();
     private final UploadFragment uploadFragment = new UploadFragment();
     private final LibraryFragment libraryFragment = new LibraryFragment();
+    private final AdminFragment adminFragment = new AdminFragment();
     private Fragment activeFragment = homeFragment;
 
     @Override
@@ -28,14 +29,21 @@ public class MainActivity extends AppCompatActivity implements MusicPlayerManage
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        boolean isAdmin = AuthManager.getInstance(this).isAdmin();
+        binding.bottomNavigation.getMenu().findItem(R.id.nav_admin).setVisible(isAdmin);
+
         // Setup fragments in container
-        getSupportFragmentManager().beginTransaction()
+        var transaction = getSupportFragmentManager().beginTransaction()
                 .add(R.id.fragmentContainer, libraryFragment, "5").hide(libraryFragment)
                 .add(R.id.fragmentContainer, uploadFragment, "4").hide(uploadFragment)
                 .add(R.id.fragmentContainer, playlistsFragment, "3").hide(playlistsFragment)
                 .add(R.id.fragmentContainer, searchFragment, "2").hide(searchFragment)
-                .add(R.id.fragmentContainer, homeFragment, "1")
-                .commit();
+                .add(R.id.fragmentContainer, homeFragment, "1");
+
+        if (isAdmin) {
+            transaction.add(R.id.fragmentContainer, adminFragment, "admin").hide(adminFragment);
+        }
+        transaction.commit();
 
         binding.bottomNavigation.setOnItemSelectedListener(item -> {
             int itemId = item.getItemId();
@@ -53,6 +61,9 @@ public class MainActivity extends AppCompatActivity implements MusicPlayerManage
                 return true;
             } else if (itemId == R.id.nav_library) {
                 switchFragment(libraryFragment);
+                return true;
+            } else if (itemId == R.id.nav_admin) {
+                switchFragment(adminFragment);
                 return true;
             }
             return false;

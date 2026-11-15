@@ -47,6 +47,7 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.Playli
     @Override
     public void onBindViewHolder(@NonNull PlaylistViewHolder holder, int position) {
         Playlist playlist = playlistList.get(position);
+        com.beatsync.app.ui.utils.AnimationHelper.animateItemEntrance(holder.itemView, position);
         holder.bind(playlist);
     }
 
@@ -72,7 +73,9 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.Playli
             binding.tvPlaylistSubtitle.setText(subtitle);
 
             if (playlist.getCoverUrl() != null && !playlist.getCoverUrl().isEmpty()) {
-                String fullUrl = AuthManager.getInstance(context).getBaseUrl() + playlist.getCoverUrl();
+                String fullUrl = playlist.getCoverUrl().startsWith("http")
+                        ? playlist.getCoverUrl()
+                        : AuthManager.getInstance(context).getBaseUrl() + playlist.getCoverUrl();
                 binding.ivPlaylistCover.setVisibility(View.VISIBLE);
                 Glide.with(context)
                         .load(fullUrl)

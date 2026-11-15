@@ -79,6 +79,9 @@ public class LibraryFragment extends Fragment implements MusicPlayerManager.Play
         // Create Playlist
         binding.btnCreatePlaylist.setOnClickListener(v -> showCreatePlaylistDialog());
 
+        // Reset Password
+        binding.btnResetPassword.setOnClickListener(v -> showResetPasswordDialog());
+
         // Logout
         binding.btnLogout.setOnClickListener(v -> {
             new AlertDialog.Builder(requireContext())
@@ -261,10 +264,65 @@ public class LibraryFragment extends Fragment implements MusicPlayerManager.Play
         dialog.show();
     }
 
+    private void showResetPasswordDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_reset_password, null);
+        builder.setView(dialogView);
+        AlertDialog dialog = builder.create();
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
+        EditText etOld = dialogView.findViewById(R.id.etOldPassword);
+        EditText etNew = dialogView.findViewById(R.id.etNewPassword);
+        EditText etConfirm = dialogView.findViewById(R.id.etConfirmPassword);
+        View btnCancel = dialogView.findViewById(R.id.btnCancel);
+        View btnSubmit = dialogView.findViewById(R.id.btnSubmitReset);
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        btnSubmit.setOnClickListener(v -> {
+            String oldPwd = etOld.getText().toString().trim();
+            String newPwd = etNew.getText().toString().trim();
+            String confirmPwd = etConfirm.getText().toString().trim();
+
+            if (oldPwd.isEmpty()) {
+                etOld.setError("Enter current password");
+                return;
+            }
+            if (newPwd.length() < 4) {
+                etNew.setError("New password must be at least 4 characters");
+                return;
+            }
+            if (!newPwd.equals(confirmPwd)) {
+                etConfirm.setError("Passwords do not match");
+                return;
+            }
+
+            btnSubmit.setEnabled(false);
+            ApiClient.getInstance(requireContext()).resetPassword(oldPwd, newPwd, new ApiClient.ApiCallback<String>() {
+                @Override
+                public void onSuccess(String result) {
+                    Toast.makeText(requireContext(), "Password updated successfully!", Toast.LENGTH_SHORT).show();
+                    dialog.dismiss();
+                }
+
+                @Override
+                public void onError(String error) {
+                    btnSubmit.setEnabled(true);
+                    Toast.makeText(requireContext(), "Error: " + error, Toast.LENGTH_SHORT).show();
+                }
+            });
+        });
+
+        dialog.show();
+    }
+
     private void showTrackOptions(Track track, View anchor) {
         PopupMenu popup = new PopupMenu(requireContext(), anchor);
         popup.getMenu().add(0, 1, 0, track.isLiked() ? "Unlike Track" : "Like Track");
         popup.getMenu().add(0, 2, 1, "Add to Playlist");
+        popup.getMenu().add(0, 3, 2, "Delete Track");
 
         popup.setOnMenuItemClickListener(item -> {
             if (item.getItemId() == 1) {
@@ -284,6 +342,27 @@ public class LibraryFragment extends Fragment implements MusicPlayerManager.Play
                 return true;
             } else if (item.getItemId() == 2) {
                 showAddToPlaylistDialog(track);
+                return true;
+            } else if (item.getItemId() == 3) {
+                new AlertDialog.Builder(requireContext())
+                        .setTitle("Delete Track")
+                        .setMessage("Are you sure you want to delete \"" + track.getTitle() + "\"?")
+                        .setPositiveButton("Delete", (dialog, which) -> {
+                            ApiClient.getInstance(requireContext()).deleteTrack(track.getId(), new ApiClient.ApiCallback<String>() {
+                                @Override
+                                public void onSuccess(String result) {
+                                    Toast.makeText(requireContext(), "Track deleted", Toast.LENGTH_SHORT).show();
+                                    loadActiveContent();
+                                }
+
+                                @Override
+                                public void onError(String error) {
+                                    Toast.makeText(requireContext(), "Error: " + error, Toast.LENGTH_SHORT).show();
+                                }
+                            });
+                        })
+                        .setNegativeButton("Cancel", null)
+                        .show();
                 return true;
             }
             return false;
