@@ -100,21 +100,23 @@ public class AdminFragment extends Fragment {
 
     private void updateTabVisuals() {
         if (isUsersTab) {
-            binding.btnTabUsers.setBackgroundResource(R.drawable.bg_card_highlight);
+            binding.btnTabUsers.setBackgroundResource(R.drawable.bg_liquid_glass_pill);
             binding.btnTabUsers.setTextColor(Color.WHITE);
             binding.btnTabTracks.setBackgroundColor(Color.TRANSPARENT);
             binding.btnTabTracks.setTextColor(Color.parseColor("#888888"));
 
             binding.rvAdminTracks.setVisibility(View.GONE);
             binding.rvAdminUsers.setVisibility(View.VISIBLE);
+            AnimationHelper.applySpringScaleFeedback(binding.btnTabUsers);
         } else {
-            binding.btnTabTracks.setBackgroundResource(R.drawable.bg_card_highlight);
+            binding.btnTabTracks.setBackgroundResource(R.drawable.bg_liquid_glass_pill);
             binding.btnTabTracks.setTextColor(Color.WHITE);
             binding.btnTabUsers.setBackgroundColor(Color.TRANSPARENT);
             binding.btnTabUsers.setTextColor(Color.parseColor("#888888"));
 
             binding.rvAdminUsers.setVisibility(View.GONE);
             binding.rvAdminTracks.setVisibility(View.VISIBLE);
+            AnimationHelper.applySpringScaleFeedback(binding.btnTabTracks);
         }
     }
 

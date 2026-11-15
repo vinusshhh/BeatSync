@@ -42,6 +42,25 @@ public class NowPlayingActivity extends AppCompatActivity implements MusicPlayer
         binding = ActivityNowPlayingBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        // Edge-to-edge transparent system bars
+        androidx.core.view.WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+        getWindow().setStatusBarColor(android.graphics.Color.TRANSPARENT);
+        getWindow().setNavigationBarColor(android.graphics.Color.TRANSPARENT);
+
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
+            androidx.core.graphics.Insets systemBars = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars());
+            float density = getResources().getDisplayMetrics().density;
+            int baseTop = (int) (16 * density);
+            int baseBottom = (int) (14 * density);
+            binding.getRoot().setPadding(
+                    binding.getRoot().getPaddingStart(),
+                    systemBars.top + baseTop,
+                    binding.getRoot().getPaddingEnd(),
+                    systemBars.bottom + baseBottom
+            );
+            return insets;
+        });
+
         playerManager = MusicPlayerManager.getInstance(this);
 
         setupAestheticsAndAnimations();

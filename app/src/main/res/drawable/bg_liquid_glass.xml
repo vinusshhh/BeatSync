@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Base Layer: Translucent Dark Frosted Acrylic Substrate -->
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="26dp" />
+            <gradient
+                android:angle="270"
+                android:startColor="#E6151B28"
+                android:centerColor="#D90E121C"
+                android:endColor="#E6090C12"
+                android:type="linear" />
+        </shape>
+    </item>
+
+    <!-- Mid Layer: Apple Specular Sheen (Top-to-Bottom Light Dispersion) -->
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="26dp" />
+            <gradient
+                android:angle="270"
+                android:startColor="#26FFFFFF"
+                android:centerColor="#0AFFFFFF"
+                android:endColor="#14FFFFFF"
+                android:type="linear" />
+        </shape>
+    </item>
+
+    <!-- Top Edge Specular Hairline Rim: 1dp Directional Glass Stroke -->
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="26dp" />
+            <stroke
+                android:width="1.2dp"
+                android:color="#4DFFFFFF" />
+        </shape>
+    </item>
+</layer-list>

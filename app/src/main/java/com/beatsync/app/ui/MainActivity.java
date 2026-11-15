@@ -37,8 +37,23 @@ public class MainActivity extends AppCompatActivity implements MusicPlayerManage
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        // Edge-to-edge transparent system bars
+        androidx.core.view.WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+        getWindow().setStatusBarColor(Color.TRANSPARENT);
+        getWindow().setNavigationBarColor(Color.TRANSPARENT);
+
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(binding.getRoot(), (v, insets) -> {
+            androidx.core.graphics.Insets systemBars = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars());
+            binding.fragmentContainer.setPadding(0, systemBars.top, 0, 0);
+            android.view.ViewGroup.MarginLayoutParams lp = (android.view.ViewGroup.MarginLayoutParams) binding.customBottomBar.getLayoutParams();
+            int baseMargin = (int) (12 * getResources().getDisplayMetrics().density);
+            lp.bottomMargin = baseMargin + systemBars.bottom;
+            binding.customBottomBar.setLayoutParams(lp);
+            return insets;
+        });
+
         boolean isAdmin = AuthManager.getInstance(this).isAdmin();
-        binding.tabNavAdmin.setVisibility(isAdmin ? View.VISIBLE : View.GONE);
+        updateAdminTabVisibility();
 
         // Setup fragments in container
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction()
@@ -197,6 +212,7 @@ public class MainActivity extends AppCompatActivity implements MusicPlayerManage
     @Override
     protected void onResume() {
         super.onResume();
+        updateAdminTabVisibility();
         Track current = MusicPlayerManager.getInstance(this).getCurrentTrack();
         if (current != null) {
             updateMiniPlayer(current);
@@ -251,6 +267,14 @@ public class MainActivity extends AppCompatActivity implements MusicPlayerManage
         if (totalMs > 0) {
             int progress = (int) (((long) currentMs * 1000) / totalMs);
             binding.miniProgressBar.setProgress(progress);
+        }
+    }
+
+    private void updateAdminTabVisibility() {
+        boolean isAdmin = AuthManager.getInstance(this).isAdmin();
+        binding.tabNavAdmin.setVisibility(isAdmin ? View.VISIBLE : View.GONE);
+        if (!isAdmin && currentTabIndex == 5) {
+            selectTab(0);
         }
     }
 

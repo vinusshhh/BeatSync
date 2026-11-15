@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/bg_dark"
+    android:background="@drawable/bg_ambient_lighting"
     android:paddingStart="20dp"
     android:paddingEnd="20dp"
     android:paddingTop="20dp">
@@ -20,7 +20,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="BEATSYNC // ADMIN CONSOLE"
-            android:textColor="@color/accent_cyan"
+            android:textColor="@color/text_secondary"
             android:textSize="11sp"
             android:textStyle="bold"
             android:letterSpacing="0.14" />
@@ -42,7 +42,7 @@
             android:textSize="12sp"
             android:layout_marginTop="4dp" />
 
-        <!-- Stats Counter Badges -->
+        <!-- Stats Counter Badges (Liquid Glass Pills) -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -55,11 +55,11 @@
                 android:layout_height="wrap_content"
                 android:text="Users: ..."
                 android:textColor="@color/text_primary"
-                android:textSize="11sp"
+                android:textSize="12sp"
                 android:textStyle="bold"
-                android:background="@drawable/bg_card_minimal"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
+                android:background="@drawable/bg_liquid_glass_pill"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
                 android:paddingTop="6dp"
                 android:paddingBottom="6dp"
                 android:layout_marginEnd="8dp" />
@@ -70,24 +70,24 @@
                 android:layout_height="wrap_content"
                 android:text="Tracks: ..."
                 android:textColor="@color/text_primary"
-                android:textSize="11sp"
+                android:textSize="12sp"
                 android:textStyle="bold"
-                android:background="@drawable/bg_card_minimal"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
+                android:background="@drawable/bg_liquid_glass_pill"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
                 android:paddingTop="6dp"
                 android:paddingBottom="6dp" />
         </LinearLayout>
     </LinearLayout>
 
-    <!-- Tab Toggle Buttons -->
+    <!-- Liquid Glass Segmented Tab Switcher -->
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="44dp"
+        android:layout_height="48dp"
         android:orientation="horizontal"
-        android:background="@drawable/bg_card_minimal"
+        android:background="@drawable/bg_liquid_glass_dock"
         android:padding="4dp"
-        android:layout_marginBottom="16dp">
+        android:layout_marginBottom="18dp">
 
         <TextView
             android:id="@+id/btnTabUsers"
@@ -100,7 +100,7 @@
             android:textStyle="bold"
             android:gravity="center"
             android:letterSpacing="0.08"
-            android:background="@drawable/bg_card_highlight" />
+            android:background="@drawable/bg_liquid_glass_pill" />
 
         <TextView
             android:id="@+id/btnTabTracks"

@@ -1,38 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Layer 1: Deep Frosted Glass Base -->
+    <!-- Base Layer: Deep Frosted Dark Acrylic Substrate -->
     <item>
         <shape android:shape="rectangle">
-            <corners android:radius="26dp" />
+            <corners android:radius="28dp" />
             <gradient
                 android:angle="270"
-                android:startColor="#F2121722"
-                android:centerColor="#E60D1017"
-                android:endColor="#F2090B10"
+                android:startColor="#F0151C2C"
+                android:centerColor="#E60E121E"
+                android:endColor="#F0090C12"
                 android:type="linear" />
         </shape>
     </item>
 
-    <!-- Layer 2: Ambient Liquid Light Dispersion -->
+    <!-- Mid Layer: Soft Liquid Light Dispersion -->
     <item>
         <shape android:shape="rectangle">
-            <corners android:radius="26dp" />
+            <corners android:radius="28dp" />
             <gradient
                 android:angle="270"
                 android:startColor="#30FFFFFF"
-                android:centerColor="#0DFFFFFF"
+                android:centerColor="#0BFFFFFF"
                 android:endColor="#14FFFFFF"
                 android:type="linear" />
         </shape>
     </item>
 
-    <!-- Layer 3: Crisp Hairline Glass Specular Rim -->
+    <!-- Top Edge Specular Hairline Rim -->
     <item>
         <shape android:shape="rectangle">
-            <corners android:radius="26dp" />
+            <corners android:radius="28dp" />
             <stroke
                 android:width="1.5dp"
-                android:color="#52FFFFFF" />
+                android:color="#59FFFFFF" />
         </shape>
     </item>
 </layer-list>

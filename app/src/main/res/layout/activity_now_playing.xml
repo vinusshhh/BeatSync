@@ -4,8 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@drawable/bg_ambient_mesh"
-    android:fitsSystemWindows="true"
+    android:background="@drawable/bg_ambient_lighting"
+    android:fitsSystemWindows="false"
     android:paddingStart="24dp"
     android:paddingEnd="24dp"
     android:paddingTop="36dp"
@@ -91,20 +91,16 @@
         android:layout_marginTop="16dp"
         android:layout_marginBottom="20dp">
 
-        <!-- Album Art Container (Liquid Glass Card) -->
-        <androidx.cardview.widget.CardView
+        <!-- Album Art Container (Liquid Glass Layout) -->
+        <com.beatsync.app.ui.custom.LiquidGlassLayout
             android:id="@+id/cardArtContainer"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_gravity="center"
-            app:cardCornerRadius="26dp"
-            app:cardElevation="0dp"
-            app:cardBackgroundColor="@android:color/transparent">
+            android:layout_gravity="center">
 
             <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:background="@drawable/bg_liquid_glass_card">
+                android:layout_height="match_parent">
 
                 <ImageView
                     android:id="@+id/ivBigCover"
@@ -139,15 +135,14 @@
                 </LinearLayout>
 
             </RelativeLayout>
-        </androidx.cardview.widget.CardView>
+        </com.beatsync.app.ui.custom.LiquidGlassLayout>
 
-        <!-- Lyrics Container (Liquid Glass Panel) -->
-        <FrameLayout
+        <!-- Lyrics Container (Liquid Glass Layout with edge fade masks) -->
+        <com.beatsync.app.ui.custom.LiquidGlassLayout
             android:id="@+id/layoutLyricsContainer"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@drawable/bg_liquid_glass_panel"
-            android:padding="20dp"
+            android:padding="22dp"
             android:visibility="gone">
 
             <LinearLayout
@@ -155,23 +150,23 @@
                 android:layout_height="match_parent"
                 android:orientation="vertical">
 
-                <!-- Lyrics Header -->
+                <!-- Lyrics Header (Matching Reference Image) -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
                     android:gravity="center_vertical"
-                    android:layout_marginBottom="10dp">
+                    android:layout_marginBottom="12dp">
 
                     <TextView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="LYRICS"
-                        android:textColor="@color/text_primary"
+                        android:text="LIVE SYNCED LYRICS"
+                        android:textColor="@color/text_secondary"
                         android:textSize="11sp"
                         android:textStyle="bold"
-                        android:letterSpacing="0.16" />
+                        android:letterSpacing="0.14" />
 
                     <ProgressBar
                         android:id="@+id/pbLyricsLoading"
@@ -181,13 +176,15 @@
                         android:visibility="gone" />
                 </LinearLayout>
 
-                <!-- Scrollable Plain Lyrics Text -->
+                <!-- Scrollable Plain Lyrics Text with Top/Bottom Edge Fade Masks -->
                 <androidx.core.widget.NestedScrollView
                     android:id="@+id/scrollLyrics"
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
                     android:layout_weight="1"
                     android:scrollbars="none"
+                    android:requiresFadingEdge="vertical"
+                    android:fadingEdgeLength="36dp"
                     android:overScrollMode="always"
                     android:fillViewport="true">
 
@@ -195,13 +192,13 @@
                         android:id="@+id/tvLyricsContent"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:gravity="center_horizontal"
-                        android:lineSpacingMultiplier="1.55"
+                        android:gravity="center"
+                        android:lineSpacingMultiplier="1.50"
                         android:textColor="@color/text_primary"
-                        android:textSize="17sp"
+                        android:textSize="16sp"
                         android:fontFamily="sans-serif-medium"
-                        android:paddingTop="12dp"
-                        android:paddingBottom="36dp" />
+                        android:paddingTop="16dp"
+                        android:paddingBottom="40dp" />
                 </androidx.core.widget.NestedScrollView>
 
                 <TextView
@@ -214,7 +211,7 @@
                     android:textSize="14sp"
                     android:visibility="gone" />
             </LinearLayout>
-        </FrameLayout>
+        </com.beatsync.app.ui.custom.LiquidGlassLayout>
     </FrameLayout>
 
     <!-- Title, Artist, Badge, Heart -->
@@ -362,14 +359,14 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Previous" />
 
-        <!-- Big Play/Pause Button -->
+        <!-- Big Play/Pause Button (Luminous Liquid Glass) -->
         <FrameLayout
             android:id="@+id/btnPlayPauseContainer"
-            android:layout_width="66dp"
-            android:layout_height="66dp"
+            android:layout_width="68dp"
+            android:layout_height="68dp"
             android:layout_marginStart="24dp"
             android:layout_marginEnd="24dp"
-            android:background="@drawable/bg_liquid_glass_pill"
+            android:background="@drawable/bg_liquid_play_button"
             android:clickable="true"
             android:focusable="true">
 

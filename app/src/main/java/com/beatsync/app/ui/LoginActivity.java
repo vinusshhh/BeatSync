@@ -24,6 +24,11 @@ public class LoginActivity extends AppCompatActivity {
         binding = ActivityLoginBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
 
+        // Edge-to-edge transparent system bars
+        androidx.core.view.WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+        getWindow().setStatusBarColor(android.graphics.Color.TRANSPARENT);
+        getWindow().setNavigationBarColor(android.graphics.Color.TRANSPARENT);
+
         binding.btnLogin.setOnClickListener(v -> performLogin());
         com.beatsync.app.ui.utils.AnimationHelper.addPressScaleEffect(binding.btnLogin);
 

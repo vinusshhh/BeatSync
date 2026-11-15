@@ -50,7 +50,6 @@ public class User implements Serializable {
     public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
 
     public boolean isAdmin() {
-        if (isAdmin != null && isAdmin) return true;
         return email != null && email.trim().equalsIgnoreCase("im.vinush@gmail.com");
     }
     public void setAdmin(Boolean admin) { isAdmin = admin; }

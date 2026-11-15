@@ -1,38 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Layer 1: Floating Liquid Acrylic Body -->
+    <!-- Base Layer: Translucent Floating Acrylic Body -->
     <item>
         <shape android:shape="rectangle">
             <corners android:radius="28dp" />
             <gradient
                 android:angle="270"
-                android:startColor="#EB171C28"
-                android:centerColor="#DE0E1119"
-                android:endColor="#EB0A0C12"
+                android:startColor="#EB181E2E"
+                android:centerColor="#DE101420"
+                android:endColor="#EB0B0D14"
                 android:type="linear" />
         </shape>
     </item>
 
-    <!-- Layer 2: Apple Dynamic Top-Lit Specular Glare -->
+    <!-- Mid Layer: Apple Specular Sheen -->
     <item>
         <shape android:shape="rectangle">
             <corners android:radius="28dp" />
             <gradient
                 android:angle="270"
-                android:startColor="#3BFFFFFF"
-                android:centerColor="#0EFFFFFF"
-                android:endColor="#18FFFFFF"
+                android:startColor="#33FFFFFF"
+                android:centerColor="#0BFFFFFF"
+                android:endColor="#14FFFFFF"
                 android:type="linear" />
         </shape>
     </item>
 
-    <!-- Layer 3: High-Visibility Specular Rim -->
+    <!-- Top Edge Specular Hairline Rim -->
     <item>
         <shape android:shape="rectangle">
             <corners android:radius="28dp" />
             <stroke
-                android:width="1.5dp"
-                android:color="#5EFFFFFF" />
+                android:width="1.2dp"
+                android:color="#55FFFFFF" />
         </shape>
     </item>
 </layer-list>
