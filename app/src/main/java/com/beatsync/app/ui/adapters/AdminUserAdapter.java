@@ -48,7 +48,10 @@ public class AdminUserAdapter extends RecyclerView.Adapter<AdminUserAdapter.User
     @Override
     public void onBindViewHolder(@NonNull UserViewHolder holder, int position) {
         User user = users.get(position);
-        AnimationHelper.animateItemEntrance(holder.itemView, position);
+        AnimationHelper.animateRubberEntrance(holder.itemView, position);
+        AnimationHelper.addRubberPressEffect(holder.btnToggleEye);
+        AnimationHelper.addRubberPressEffect(holder.btnEditPassword);
+        AnimationHelper.addRubberPressEffect(holder.btnDelete);
 
         holder.tvName.setText(user.getName() + (user.isAdmin() ? " (ADMIN)" : ""));
         holder.tvEmail.setText(user.getEmail());

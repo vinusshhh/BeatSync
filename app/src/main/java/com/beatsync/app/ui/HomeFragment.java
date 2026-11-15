@@ -25,6 +25,7 @@ import com.beatsync.app.models.User;
 import com.beatsync.app.player.MusicPlayerManager;
 import com.beatsync.app.ui.adapters.PlaylistAdapter;
 import com.beatsync.app.ui.adapters.TrackAdapter;
+import com.beatsync.app.ui.utils.AnimationHelper;
 import java.util.List;
 
 public class HomeFragment extends Fragment implements MusicPlayerManager.PlaybackListener {
@@ -58,19 +59,26 @@ public class HomeFragment extends Fragment implements MusicPlayerManager.Playbac
 
         binding.swipeRefresh.setOnRefreshListener(this::loadTracks);
 
+        AnimationHelper.addRubberPressEffect(binding.cardFeatured);
+        AnimationHelper.addRubberPressEffect(binding.btnQuickUpload);
+        AnimationHelper.addRubberPressEffect(binding.btnQuickSearch);
+
         binding.cardFeatured.setOnClickListener(v -> {
+            AnimationHelper.rubberPop(binding.cardFeatured);
             if (featuredTrack != null) {
                 MusicPlayerManager.getInstance(requireContext()).playTrack(featuredTrack);
             }
         });
 
         binding.btnQuickUpload.setOnClickListener(v -> {
+            AnimationHelper.rubberPop(v);
             if (getActivity() instanceof MainActivity) {
                 ((MainActivity) getActivity()).selectTab(R.id.nav_upload);
             }
         });
 
         binding.btnQuickSearch.setOnClickListener(v -> {
+            AnimationHelper.rubberPop(v);
             if (getActivity() instanceof MainActivity) {
                 ((MainActivity) getActivity()).selectTab(R.id.nav_search);
             }

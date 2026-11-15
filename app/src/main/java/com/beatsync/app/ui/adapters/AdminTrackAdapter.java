@@ -51,7 +51,9 @@ public class AdminTrackAdapter extends RecyclerView.Adapter<AdminTrackAdapter.Tr
     @Override
     public void onBindViewHolder(@NonNull TrackViewHolder holder, int position) {
         Track track = tracks.get(position);
-        AnimationHelper.animateItemEntrance(holder.itemView, position);
+        AnimationHelper.animateRubberEntrance(holder.itemView, position);
+        AnimationHelper.addRubberPressEffect(holder.btnPlay);
+        AnimationHelper.addRubberPressEffect(holder.btnDelete);
 
         holder.tvTitle.setText(track.getTitle());
         holder.tvArtist.setText(track.getArtist() + (track.getAlbum() != null && !track.getAlbum().isEmpty() ? " • " + track.getAlbum() : ""));

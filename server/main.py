@@ -861,6 +861,16 @@ def extract_clean_queries(title: str, artist: Optional[str] = None):
             result.append(c)
     return result
 
+def strip_lrc_timestamps(lrc_text: str) -> str:
+    if not lrc_text:
+        return ""
+    lines = []
+    for line in lrc_text.splitlines():
+        cleaned = re.sub(r"^\[\d+:\d+(?:\.\d+)?\]\s*", "", line.strip())
+        if cleaned:
+            lines.append(cleaned)
+    return "\n".join(lines).strip()
+
 @app.get("/api/lyrics")
 def get_lyrics(
     title: str = Query(...),
@@ -870,8 +880,6 @@ def get_lyrics(
     headers = {"User-Agent": "BeatSync-Audio/1.0 (https://beatsync.app)"}
     queries = extract_clean_queries(title, artist)
     
-    # First pass: Search queries looking for high-quality syncedLyrics
-    fallback_result = None
     for q in queries:
         try:
             url = f"https://lrclib.net/api/search?q={urllib.parse.quote(q)}"
@@ -881,28 +889,20 @@ def get_lyrics(
                     items = json.loads(response.read().decode())
                     if isinstance(items, list) and len(items) > 0:
                         for item in items:
-                            if item.get("syncedLyrics"):
+                            plain = item.get("plainLyrics")
+                            synced = item.get("syncedLyrics")
+                            if not plain and synced:
+                                plain = strip_lrc_timestamps(synced)
+                            if plain and len(plain.strip()) > 10:
                                 return {
                                     "found": True,
-                                    "synced_lyrics": item.get("syncedLyrics"),
-                                    "plain_lyrics": item.get("plainLyrics"),
+                                    "plain_lyrics": plain.strip(),
+                                    "synced_lyrics": None,
                                     "track_name": item.get("trackName"),
                                     "artist_name": item.get("artistName")
                                 }
-                        if fallback_result is None and items[0].get("plainLyrics"):
-                            fallback_result = items[0]
         except Exception:
             pass
-
-    # If only plain lyrics were found
-    if fallback_result:
-        return {
-            "found": True,
-            "synced_lyrics": None,
-            "plain_lyrics": fallback_result.get("plainLyrics"),
-            "track_name": fallback_result.get("trackName"),
-            "artist_name": fallback_result.get("artistName")
-        }
 
     return {
         "found": False,

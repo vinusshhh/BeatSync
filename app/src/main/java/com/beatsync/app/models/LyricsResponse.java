@@ -45,6 +45,17 @@ public class LyricsResponse implements Serializable {
     public String getTrackName() { return trackName; }
     public String getArtistName() { return artistName; }
 
+    public String getCleanLyricalText() {
+        if (plainLyrics != null && !plainLyrics.trim().isEmpty()) {
+            return plainLyrics.trim();
+        }
+        if (syncedLyrics != null && !syncedLyrics.trim().isEmpty()) {
+            // Strip timestamp prefixes like [00:12.34] or [01:23]
+            return syncedLyrics.replaceAll("(?m)^\\[\\d+:\\d+(?:\\.\\d+)?\\]\\s*", "").trim();
+        }
+        return "";
+    }
+
     public List<LyricLine> getParsedLines() {
         if (syncedLyrics == null || syncedLyrics.trim().isEmpty()) {
             return Collections.emptyList();

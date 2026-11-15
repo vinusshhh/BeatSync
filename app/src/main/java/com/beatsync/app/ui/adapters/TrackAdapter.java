@@ -65,7 +65,8 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.TrackViewHol
     @Override
     public void onBindViewHolder(@NonNull TrackViewHolder holder, int position) {
         Track track = trackList.get(position);
-        com.beatsync.app.ui.utils.AnimationHelper.animateItemEntrance(holder.itemView, position);
+        com.beatsync.app.ui.utils.AnimationHelper.animateRubberEntrance(holder.itemView, position);
+        com.beatsync.app.ui.utils.AnimationHelper.addRubberPressEffect(holder.itemView);
         holder.bind(track, position);
     }
 
@@ -122,8 +123,9 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.TrackViewHol
                 binding.ivDefaultNote.setVisibility(View.VISIBLE);
             }
 
-            // Clicks
+            // Clicks with rubber pop
             itemView.setOnClickListener(v -> {
+                com.beatsync.app.ui.utils.AnimationHelper.rubberPop(itemView);
                 if (clickListener != null) {
                     clickListener.onTrackClick(track, position, trackList);
                 }

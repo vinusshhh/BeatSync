@@ -66,10 +66,12 @@ public class MainActivity extends AppCompatActivity implements MusicPlayerManage
         });
 
         binding.miniBtnPlayPause.setOnClickListener(v -> {
+            AnimationHelper.rubberPop(binding.miniBtnPlayPause);
             MusicPlayerManager.getInstance(this).togglePlayPause();
         });
 
         binding.miniBtnNext.setOnClickListener(v -> {
+            AnimationHelper.rubberPop(binding.miniBtnNext);
             MusicPlayerManager.getInstance(this).playNext();
         });
 
@@ -115,26 +117,32 @@ public class MainActivity extends AppCompatActivity implements MusicPlayerManage
             case 0:
                 targetFragment = homeFragment;
                 setTabActive(binding.iconNavHome, binding.labelNavHome, activeColor);
+                AnimationHelper.rubberJellyBounce(binding.tabNavHome);
                 break;
             case 1:
                 targetFragment = searchFragment;
                 setTabActive(binding.iconNavSearch, binding.labelNavSearch, activeColor);
+                AnimationHelper.rubberJellyBounce(binding.tabNavSearch);
                 break;
             case 2:
                 targetFragment = playlistsFragment;
                 setTabActive(binding.iconNavPlaylists, binding.labelNavPlaylists, activeColor);
+                AnimationHelper.rubberJellyBounce(binding.tabNavPlaylists);
                 break;
             case 3:
                 targetFragment = uploadFragment;
                 setTabActive(binding.iconNavUpload, binding.labelNavUpload, activeColor);
+                AnimationHelper.rubberJellyBounce(binding.tabNavUpload);
                 break;
             case 4:
                 targetFragment = libraryFragment;
                 setTabActive(binding.iconNavVault, binding.labelNavVault, activeColor);
+                AnimationHelper.rubberJellyBounce(binding.tabNavVault);
                 break;
             case 5:
                 targetFragment = adminFragment;
                 setTabActive(binding.iconNavAdmin, binding.labelNavAdmin, activeColor);
+                AnimationHelper.rubberJellyBounce(binding.tabNavAdmin);
                 break;
         }
 

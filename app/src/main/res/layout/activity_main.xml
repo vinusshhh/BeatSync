@@ -3,10 +3,10 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg_dark"
+    android:background="@drawable/bg_ambient_mesh"
     android:fitsSystemWindows="true">
 
-    <!-- Bottom Dock: Guaranteed to sit pinned at the bottom -->
+    <!-- Bottom Dock: Floating Liquid Glass Navigation Dock -->
     <LinearLayout
         android:id="@+id/bottomDock"
         android:layout_width="match_parent"
@@ -14,17 +14,18 @@
         android:layout_alignParentBottom="true"
         android:orientation="vertical">
 
-        <!-- Persistent Floating Mini Player -->
+        <!-- Persistent Floating Mini Player (Liquid Glass Card) -->
         <androidx.cardview.widget.CardView
             android:id="@+id/miniPlayerLayout"
             android:layout_width="match_parent"
             android:layout_height="64dp"
-            android:layout_marginStart="10dp"
-            android:layout_marginEnd="10dp"
-            android:layout_marginBottom="8dp"
-            app:cardCornerRadius="14dp"
-            app:cardElevation="8dp"
-            app:cardBackgroundColor="@color/mini_player_bg"
+            android:layout_marginStart="14dp"
+            android:layout_marginEnd="14dp"
+            android:layout_marginBottom="10dp"
+            app:cardCornerRadius="20dp"
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="@android:color/transparent"
+            android:background="@drawable/bg_liquid_glass_card"
             android:visibility="gone">
 
             <RelativeLayout
@@ -137,22 +138,19 @@
             </RelativeLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- Hairline Divider above Bottom Navigation -->
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1dp"
-            android:background="@color/border_subtle" />
-
-        <!-- Custom Responsive Bottom Navigation Bar (No 5-item Material limit) -->
+        <!-- Custom Responsive Floating Liquid Glass Bottom Navigation Dock -->
         <LinearLayout
             android:id="@+id/customBottomBar"
             android:layout_width="match_parent"
-            android:layout_height="62dp"
+            android:layout_height="64dp"
+            android:layout_marginStart="14dp"
+            android:layout_marginEnd="14dp"
+            android:layout_marginBottom="12dp"
             android:orientation="horizontal"
-            android:background="@color/bg_bottom_nav"
+            android:background="@drawable/bg_liquid_glass_dock"
             android:gravity="center_vertical"
-            android:paddingStart="4dp"
-            android:paddingEnd="4dp">
+            android:paddingStart="6dp"
+            android:paddingEnd="6dp">
 
             <!-- 1. Home Tab -->
             <LinearLayout

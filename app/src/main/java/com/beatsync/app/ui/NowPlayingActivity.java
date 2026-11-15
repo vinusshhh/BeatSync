@@ -17,11 +17,9 @@ import com.beatsync.app.api.ApiClient;
 import com.beatsync.app.auth.AuthManager;
 import com.beatsync.app.databinding.ActivityNowPlayingBinding;
 import com.beatsync.app.models.LyricsResponse;
-import com.beatsync.app.models.LyricsResponse.LyricLine;
 import com.beatsync.app.models.Playlist;
 import com.beatsync.app.models.Track;
 import com.beatsync.app.player.MusicPlayerManager;
-import com.beatsync.app.ui.adapters.LyricsAdapter;
 import com.beatsync.app.ui.adapters.PlaylistAdapter;
 import com.beatsync.app.ui.utils.AnimationHelper;
 import com.bumptech.glide.Glide;
@@ -32,7 +30,6 @@ public class NowPlayingActivity extends AppCompatActivity implements MusicPlayer
 
     private ActivityNowPlayingBinding binding;
     private MusicPlayerManager playerManager;
-    private LyricsAdapter lyricsAdapter;
     private ObjectAnimator vinylAnimator;
     private ObjectAnimator liquidBreathingAnimator;
     private boolean isUserSeeking = false;
@@ -50,22 +47,41 @@ public class NowPlayingActivity extends AppCompatActivity implements MusicPlayer
         setupAestheticsAndAnimations();
         setupLyricsView();
 
-        binding.btnCollapse.setOnClickListener(v -> finish());
-        binding.btnPlayPauseContainer.setOnClickListener(v -> playerManager.togglePlayPause());
-        binding.btnNext.setOnClickListener(v -> playerManager.playNext());
-        binding.btnPrevious.setOnClickListener(v -> playerManager.playPrevious());
+        binding.btnCollapse.setOnClickListener(v -> {
+            AnimationHelper.rubberPop(binding.btnCollapse);
+            finish();
+        });
+
+        binding.btnPlayPauseContainer.setOnClickListener(v -> {
+            AnimationHelper.rubberPop(binding.btnPlayPauseContainer);
+            AnimationHelper.rubberJellyBounce(binding.ivBigCover);
+            playerManager.togglePlayPause();
+        });
+
+        binding.btnNext.setOnClickListener(v -> {
+            AnimationHelper.rubberPop(binding.btnNext);
+            playerManager.playNext();
+        });
+
+        binding.btnPrevious.setOnClickListener(v -> {
+            AnimationHelper.rubberPop(binding.btnPrevious);
+            playerManager.playPrevious();
+        });
 
         binding.btnShuffle.setOnClickListener(v -> {
+            AnimationHelper.rubberPop(binding.btnShuffle);
             playerManager.toggleShuffle();
             updateShuffleButton();
         });
 
         binding.btnRepeat.setOnClickListener(v -> {
+            AnimationHelper.rubberPop(binding.btnRepeat);
             playerManager.cycleRepeatMode();
             updateRepeatButton();
         });
 
         binding.btnLike.setOnClickListener(v -> {
+            AnimationHelper.rubberJellyBounce(binding.btnLike);
             Track current = playerManager.getCurrentTrack();
             if (current != null) {
                 ApiClient.getInstance(this).toggleLike(current.getId(), new ApiClient.ApiCallback<Boolean>() {
@@ -85,6 +101,7 @@ public class NowPlayingActivity extends AppCompatActivity implements MusicPlayer
         });
 
         binding.btnAddToPlaylist.setOnClickListener(v -> {
+            AnimationHelper.rubberPop(binding.btnAddToPlaylist);
             Track current = playerManager.getCurrentTrack();
             if (current != null) {
                 showAddToPlaylistDialog(current);
@@ -153,26 +170,45 @@ public class NowPlayingActivity extends AppCompatActivity implements MusicPlayer
     }
 
     private void setupLyricsView() {
-        lyricsAdapter = new LyricsAdapter();
-        binding.rvLyrics.setLayoutManager(new LinearLayoutManager(this));
-        binding.rvLyrics.setAdapter(lyricsAdapter);
-
-        lyricsAdapter.setOnLineClickListener(line -> {
-            playerManager.seekTo((int) line.getTimeMs());
-            Toast.makeText(this, "Jumped to " + formatTime((int) line.getTimeMs()), Toast.LENGTH_SHORT).show();
-        });
+        binding.tvLyricsContent.setText("");
+        binding.tvLyricsEmpty.setVisibility(View.GONE);
     }
 
     private void toggleLyricsView() {
         isLyricsMode = !isLyricsMode;
+        AnimationHelper.rubberPop(binding.btnToggleLyrics);
         if (isLyricsMode) {
-            binding.cardArtContainer.setVisibility(View.GONE);
-            binding.layoutLyricsContainer.setVisibility(View.VISIBLE);
-            binding.btnToggleLyrics.setColorFilter(ContextCompat.getColor(this, R.color.accent_cyan));
-        } else {
-            binding.layoutLyricsContainer.setVisibility(View.GONE);
-            binding.cardArtContainer.setVisibility(View.VISIBLE);
+            binding.cardArtContainer.animate()
+                    .scaleX(0.86f).scaleY(0.86f).alpha(0f).setDuration(160)
+                    .withEndAction(() -> {
+                        binding.cardArtContainer.setVisibility(View.GONE);
+                        binding.layoutLyricsContainer.setVisibility(View.VISIBLE);
+                        binding.layoutLyricsContainer.setScaleX(0.86f);
+                        binding.layoutLyricsContainer.setScaleY(0.86f);
+                        binding.layoutLyricsContainer.setAlpha(0f);
+                        binding.layoutLyricsContainer.animate()
+                                .scaleX(1.0f).scaleY(1.0f).alpha(1.0f)
+                                .setDuration(280)
+                                .setInterpolator(new android.view.animation.OvershootInterpolator(2.8f))
+                                .start();
+                    }).start();
             binding.btnToggleLyrics.setColorFilter(ContextCompat.getColor(this, R.color.text_primary));
+        } else {
+            binding.layoutLyricsContainer.animate()
+                    .scaleX(0.86f).scaleY(0.86f).alpha(0f).setDuration(160)
+                    .withEndAction(() -> {
+                        binding.layoutLyricsContainer.setVisibility(View.GONE);
+                        binding.cardArtContainer.setVisibility(View.VISIBLE);
+                        binding.cardArtContainer.setScaleX(0.86f);
+                        binding.cardArtContainer.setScaleY(0.86f);
+                        binding.cardArtContainer.setAlpha(0f);
+                        binding.cardArtContainer.animate()
+                                .scaleX(1.0f).scaleY(1.0f).alpha(1.0f)
+                                .setDuration(280)
+                                .setInterpolator(new android.view.animation.OvershootInterpolator(2.8f))
+                                .start();
+                    }).start();
+            binding.btnToggleLyrics.setColorFilter(ContextCompat.getColor(this, R.color.text_secondary));
         }
     }
 
@@ -183,41 +219,36 @@ public class NowPlayingActivity extends AppCompatActivity implements MusicPlayer
         currentLyricsTrackId = track.getId();
         binding.pbLyricsLoading.setVisibility(View.VISIBLE);
         binding.tvLyricsEmpty.setVisibility(View.GONE);
+        binding.scrollLyrics.setVisibility(View.GONE);
 
         ApiClient.getInstance(this).getLyrics(track.getTitle(), track.getArtist(), track.getDurationSeconds(), new ApiClient.ApiCallback<LyricsResponse>() {
             @Override
             public void onSuccess(LyricsResponse response) {
                 binding.pbLyricsLoading.setVisibility(View.GONE);
                 if (response != null && response.isFound()) {
-                    List<LyricLine> lines = response.getParsedLines();
-                    if (!lines.isEmpty()) {
-                        lyricsAdapter.setLines(lines);
+                    String cleanLyrics = response.getCleanLyricalText();
+                    if (!cleanLyrics.isEmpty()) {
+                        binding.tvLyricsContent.setText(cleanLyrics);
                         binding.tvLyricsEmpty.setVisibility(View.GONE);
-                        binding.rvLyrics.setVisibility(View.VISIBLE);
-                    } else if (response.getPlainLyrics() != null && !response.getPlainLyrics().isEmpty()) {
-                        binding.tvLyricsEmpty.setText(response.getPlainLyrics());
-                        binding.tvLyricsEmpty.setVisibility(View.VISIBLE);
-                        binding.rvLyrics.setVisibility(View.GONE);
-                    } else {
-                        binding.tvLyricsEmpty.setText("No synchronized lyrics available for this track.");
-                        binding.tvLyricsEmpty.setVisibility(View.VISIBLE);
-                        binding.rvLyrics.setVisibility(View.GONE);
+                        binding.scrollLyrics.setVisibility(View.VISIBLE);
+                        // Reset scroll position to top for new song
+                        binding.scrollLyrics.scrollTo(0, 0);
+                        return;
                     }
-                } else {
-                    lyricsAdapter.setLines(null);
-                    binding.tvLyricsEmpty.setText("No lyrics found for \"" + track.getTitle() + "\".");
-                    binding.tvLyricsEmpty.setVisibility(View.VISIBLE);
-                    binding.rvLyrics.setVisibility(View.GONE);
                 }
+                binding.tvLyricsContent.setText("");
+                binding.tvLyricsEmpty.setText("No lyrics available for \"" + track.getTitle() + "\".");
+                binding.tvLyricsEmpty.setVisibility(View.VISIBLE);
+                binding.scrollLyrics.setVisibility(View.GONE);
             }
 
             @Override
             public void onError(String error) {
                 binding.pbLyricsLoading.setVisibility(View.GONE);
-                lyricsAdapter.setLines(null);
+                binding.tvLyricsContent.setText("");
                 binding.tvLyricsEmpty.setText("Lyrics search unavailable");
                 binding.tvLyricsEmpty.setVisibility(View.VISIBLE);
-                binding.rvLyrics.setVisibility(View.GONE);
+                binding.scrollLyrics.setVisibility(View.GONE);
             }
         });
     }
@@ -403,26 +434,6 @@ public class NowPlayingActivity extends AppCompatActivity implements MusicPlayer
             if (totalMs > 0) {
                 int progress = (int) (((long) currentMs * 1000) / totalMs);
                 binding.seekBar.setProgress(progress);
-            }
-        }
-
-        // Synchronize Active Lyric Line
-        if (lyricsAdapter != null && lyricsAdapter.getLineCount() > 0) {
-            int lineCount = lyricsAdapter.getLineCount();
-            int matchedIndex = -1;
-
-            for (int i = 0; i < lineCount; i++) {
-                LyricLine line = lyricsAdapter.getLine(i);
-                long nextTime = (i + 1 < lineCount) ? lyricsAdapter.getLine(i + 1).getTimeMs() : Long.MAX_VALUE;
-                if (currentMs >= line.getTimeMs() && currentMs < nextTime) {
-                    matchedIndex = i;
-                    break;
-                }
-            }
-
-            if (matchedIndex != -1 && lyricsAdapter.getActivePosition() != matchedIndex) {
-                lyricsAdapter.setActivePosition(matchedIndex);
-                binding.rvLyrics.smoothScrollToPosition(matchedIndex);
             }
         }
     }

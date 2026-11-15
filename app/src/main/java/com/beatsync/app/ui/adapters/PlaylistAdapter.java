@@ -47,7 +47,8 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.Playli
     @Override
     public void onBindViewHolder(@NonNull PlaylistViewHolder holder, int position) {
         Playlist playlist = playlistList.get(position);
-        com.beatsync.app.ui.utils.AnimationHelper.animateItemEntrance(holder.itemView, position);
+        com.beatsync.app.ui.utils.AnimationHelper.animateRubberEntrance(holder.itemView, position);
+        com.beatsync.app.ui.utils.AnimationHelper.addRubberPressEffect(holder.itemView);
         holder.bind(playlist);
     }
 
@@ -86,6 +87,7 @@ public class PlaylistAdapter extends RecyclerView.Adapter<PlaylistAdapter.Playli
             }
 
             itemView.setOnClickListener(v -> {
+                com.beatsync.app.ui.utils.AnimationHelper.rubberPop(itemView);
                 if (listener != null) {
                     listener.onPlaylistClick(playlist);
                 }

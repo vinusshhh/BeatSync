@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/bg_dark"
+    android:background="@drawable/bg_ambient_mesh"
     android:fitsSystemWindows="true"
     android:paddingStart="24dp"
     android:paddingEnd="24dp"
@@ -91,19 +91,20 @@
         android:layout_marginTop="16dp"
         android:layout_marginBottom="20dp">
 
-        <!-- Album Art Container -->
+        <!-- Album Art Container (Liquid Glass Card) -->
         <androidx.cardview.widget.CardView
             android:id="@+id/cardArtContainer"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_gravity="center"
             app:cardCornerRadius="26dp"
-            app:cardElevation="12dp"
-            app:cardBackgroundColor="@color/bg_card_elevated">
+            app:cardElevation="0dp"
+            app:cardBackgroundColor="@android:color/transparent">
 
             <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_liquid_glass_card">
 
                 <ImageView
                     android:id="@+id/ivBigCover"
@@ -118,13 +119,12 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:gravity="center"
-                    android:orientation="vertical"
-                    android:background="@drawable/bg_liquid_glass_card">
+                    android:orientation="vertical">
 
                     <ImageView
                         android:id="@+id/ivVinylCenter"
-                        android:layout_width="84dp"
-                        android:layout_height="84dp"
+                        android:layout_width="92dp"
+                        android:layout_height="92dp"
                         android:src="@drawable/ic_launcher_foreground"
                         android:contentDescription="Note" />
 
@@ -132,68 +132,89 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="BEATSYNC AUDIO"
-                        android:textColor="@color/text_tertiary"
+                        android:textColor="@color/text_secondary"
                         android:textSize="11sp"
-                        android:letterSpacing="0.12"
+                        android:letterSpacing="0.14"
                         android:layout_marginTop="16dp" />
                 </LinearLayout>
 
             </RelativeLayout>
         </androidx.cardview.widget.CardView>
 
-        <!-- Synced Lyrics Container -->
-        <LinearLayout
+        <!-- Lyrics Container (Liquid Glass Panel) -->
+        <FrameLayout
             android:id="@+id/layoutLyricsContainer"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="vertical"
             android:background="@drawable/bg_liquid_glass_panel"
             android:padding="20dp"
             android:visibility="gone">
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginBottom="8dp">
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+                <!-- Lyrics Header -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="10dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="LYRICS"
+                        android:textColor="@color/text_primary"
+                        android:textSize="11sp"
+                        android:textStyle="bold"
+                        android:letterSpacing="0.16" />
+
+                    <ProgressBar
+                        android:id="@+id/pbLyricsLoading"
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:indeterminateTint="@color/text_primary"
+                        android:visibility="gone" />
+                </LinearLayout>
+
+                <!-- Scrollable Plain Lyrics Text -->
+                <androidx.core.widget.NestedScrollView
+                    android:id="@+id/scrollLyrics"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:scrollbars="none"
+                    android:overScrollMode="always"
+                    android:fillViewport="true">
+
+                    <TextView
+                        android:id="@+id/tvLyricsContent"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_horizontal"
+                        android:lineSpacingMultiplier="1.55"
+                        android:textColor="@color/text_primary"
+                        android:textSize="17sp"
+                        android:fontFamily="sans-serif-medium"
+                        android:paddingTop="12dp"
+                        android:paddingBottom="36dp" />
+                </androidx.core.widget.NestedScrollView>
 
                 <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="LIVE SYNCED LYRICS"
-                    android:textColor="@color/text_tertiary"
-                    android:textSize="10sp"
-                    android:textStyle="bold"
-                    android:letterSpacing="0.12" />
-
-                <ProgressBar
-                    android:id="@+id/pbLyricsLoading"
-                    android:layout_width="16dp"
-                    android:layout_height="16dp"
+                    android:id="@+id/tvLyricsEmpty"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:text="No lyrics available for this track."
+                    android:textColor="@color/text_secondary"
+                    android:textSize="14sp"
                     android:visibility="gone" />
             </LinearLayout>
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rvLyrics"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:scrollbars="none"
-                android:clipToPadding="false"
-                android:paddingTop="32dp"
-                android:paddingBottom="48dp" />
-
-            <TextView
-                android:id="@+id/tvLyricsEmpty"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:gravity="center"
-                android:text="No synchronized lyrics available for this track."
-                android:textColor="@color/text_tertiary"
-                android:textSize="14sp"
-                android:visibility="gone" />
-        </LinearLayout>
+        </FrameLayout>
     </FrameLayout>
 
     <!-- Title, Artist, Badge, Heart -->
