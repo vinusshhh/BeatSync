@@ -143,19 +143,188 @@
             android:layout_height="1dp"
             android:background="@color/border_subtle" />
 
-        <!-- Bottom Navigation Bar -->
-        <com.google.android.material.bottomnavigation.BottomNavigationView
-            android:id="@+id/bottomNavigation"
+        <!-- Custom Responsive Bottom Navigation Bar (No 5-item Material limit) -->
+        <LinearLayout
+            android:id="@+id/customBottomBar"
             android:layout_width="match_parent"
-            android:layout_height="64dp"
+            android:layout_height="62dp"
+            android:orientation="horizontal"
             android:background="@color/bg_bottom_nav"
-            app:menu="@menu/bottom_nav_menu"
-            app:itemIconTint="@color/selector_nav_tint"
-            app:itemTextColor="@color/selector_nav_tint"
-            app:itemIconSize="22dp"
-            app:labelVisibilityMode="labeled"
-            app:itemActiveIndicatorStyle="@style/Widget.BeatSync.NavIndicator"
-            app:elevation="12dp" />
+            android:gravity="center_vertical"
+            android:paddingStart="4dp"
+            android:paddingEnd="4dp">
+
+            <!-- 1. Home Tab -->
+            <LinearLayout
+                android:id="@+id/tabNavHome"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="?attr/selectableItemBackgroundBorderless">
+
+                <ImageView
+                    android:id="@+id/iconNavHome"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:src="@drawable/ic_home"
+                    android:tint="@color/text_primary"
+                    android:contentDescription="Home" />
+
+                <TextView
+                    android:id="@+id/labelNavHome"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Home"
+                    android:textSize="10sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:layout_marginTop="3dp" />
+            </LinearLayout>
+
+            <!-- 2. Search Tab -->
+            <LinearLayout
+                android:id="@+id/tabNavSearch"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="?attr/selectableItemBackgroundBorderless">
+
+                <ImageView
+                    android:id="@+id/iconNavSearch"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:src="@drawable/ic_search"
+                    android:tint="@color/text_tertiary"
+                    android:contentDescription="Search" />
+
+                <TextView
+                    android:id="@+id/labelNavSearch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Search"
+                    android:textSize="10sp"
+                    android:textColor="@color/text_tertiary"
+                    android:layout_marginTop="3dp" />
+            </LinearLayout>
+
+            <!-- 3. Playlists Tab -->
+            <LinearLayout
+                android:id="@+id/tabNavPlaylists"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="?attr/selectableItemBackgroundBorderless">
+
+                <ImageView
+                    android:id="@+id/iconNavPlaylists"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:src="@drawable/ic_playlist"
+                    android:tint="@color/text_tertiary"
+                    android:contentDescription="Playlists" />
+
+                <TextView
+                    android:id="@+id/labelNavPlaylists"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Playlists"
+                    android:textSize="10sp"
+                    android:textColor="@color/text_tertiary"
+                    android:layout_marginTop="3dp" />
+            </LinearLayout>
+
+            <!-- 4. Upload Tab -->
+            <LinearLayout
+                android:id="@+id/tabNavUpload"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="?attr/selectableItemBackgroundBorderless">
+
+                <ImageView
+                    android:id="@+id/iconNavUpload"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:src="@drawable/ic_upload"
+                    android:tint="@color/text_tertiary"
+                    android:contentDescription="Upload" />
+
+                <TextView
+                    android:id="@+id/labelNavUpload"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Upload"
+                    android:textSize="10sp"
+                    android:textColor="@color/text_tertiary"
+                    android:layout_marginTop="3dp" />
+            </LinearLayout>
+
+            <!-- 5. Vault Tab -->
+            <LinearLayout
+                android:id="@+id/tabNavVault"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="?attr/selectableItemBackgroundBorderless">
+
+                <ImageView
+                    android:id="@+id/iconNavVault"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:src="@drawable/ic_lock"
+                    android:tint="@color/text_tertiary"
+                    android:contentDescription="Vault" />
+
+                <TextView
+                    android:id="@+id/labelNavVault"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Vault"
+                    android:textSize="10sp"
+                    android:textColor="@color/text_tertiary"
+                    android:layout_marginTop="3dp" />
+            </LinearLayout>
+
+            <!-- 6. Admin Tab (Visible only for admin) -->
+            <LinearLayout
+                android:id="@+id/tabNavAdmin"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:visibility="gone">
+
+                <ImageView
+                    android:id="@+id/iconNavAdmin"
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:src="@drawable/ic_admin_shield"
+                    android:tint="@color/text_tertiary"
+                    android:contentDescription="Admin" />
+
+                <TextView
+                    android:id="@+id/labelNavAdmin"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Admin"
+                    android:textSize="10sp"
+                    android:textColor="@color/text_tertiary"
+                    android:layout_marginTop="3dp" />
+            </LinearLayout>
+
+        </LinearLayout>
 
     </LinearLayout>
 
