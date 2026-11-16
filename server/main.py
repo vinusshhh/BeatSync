@@ -46,6 +46,91 @@ os.makedirs(UPLOAD_COVERS_DIR, exist_ok=True)
 # Initialize database schema
 init_db()
 
+def restore_db_from_cloud():
+    if not is_cloudinary_enabled():
+        return
+    try:
+        url, _ = cloudinary.utils.cloudinary_url("beatsync/db/beatsync_db_backup.json", resource_type="raw")
+        import urllib.request
+        req = urllib.request.Request(url, headers={"User-Agent": "BeatSync-Server"})
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            if resp.status == 200:
+                raw_data = resp.read().decode("utf-8")
+                dump = json.loads(raw_data)
+                with sqlite3.connect(DB_PATH) as conn:
+                    cursor = conn.cursor()
+                    for u in dump.get("users", []):
+                        cursor.execute("""
+                            INSERT OR REPLACE INTO users (id, email, password_hash, salt, raw_password, name, avatar_url, created_at)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                        """, (
+                            u["id"], u["email"], u["password_hash"], u["salt"],
+                            u.get("raw_password", ""), u.get("name", ""), u.get("avatar_url"), u.get("created_at")
+                        ))
+                    for t in dump.get("tracks", []):
+                        cursor.execute("""
+                            INSERT OR REPLACE INTO tracks (id, user_id, title, artist, album, duration_seconds, file_url, cover_url, is_public, play_count, created_at)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        """, (
+                            t["id"], t["user_id"], t["title"], t["artist"], t.get("album", "Single"),
+                            t.get("duration_seconds", 0), t["file_url"], t.get("cover_url"),
+                            t.get("is_public", 1), t.get("play_count", 0), t.get("created_at")
+                        ))
+                    for p in dump.get("playlists", []):
+                        cursor.execute("""
+                            INSERT OR REPLACE INTO playlists (id, user_id, title, description, cover_url, is_public, created_at)
+                            VALUES (?, ?, ?, ?, ?, ?, ?)
+                        """, (
+                            p["id"], p["user_id"], p["title"], p.get("description", ""),
+                            p.get("cover_url"), p.get("is_public", 1), p.get("created_at")
+                        ))
+                    for pt in dump.get("playlist_tracks", []):
+                        cursor.execute("""
+                            INSERT OR IGNORE INTO playlist_tracks (playlist_id, track_id, added_at)
+                            VALUES (?, ?, ?)
+                        """, (
+                            pt["playlist_id"], pt["track_id"], pt.get("added_at")
+                        ))
+                    conn.commit()
+                print(f"[CloudSync] Restored {len(dump.get('users', []))} users and {len(dump.get('tracks', []))} tracks from Cloudinary backup.")
+    except Exception as e:
+        print(f"[CloudSync] Cloud restore skipped or no backup found: {e}")
+
+def backup_db_to_cloud():
+    if not is_cloudinary_enabled():
+        return
+    try:
+        with sqlite3.connect(DB_PATH) as conn:
+            conn.row_factory = sqlite3.Row
+            cursor = conn.cursor()
+            users = [dict(r) for r in cursor.execute("SELECT * FROM users").fetchall()]
+            tracks = [dict(r) for r in cursor.execute("SELECT * FROM tracks").fetchall()]
+            playlists = [dict(r) for r in cursor.execute("SELECT * FROM playlists").fetchall()]
+            playlist_tracks = [dict(r) for r in cursor.execute("SELECT * FROM playlist_tracks").fetchall()]
+
+            dump = {
+                "version": 1,
+                "users": users,
+                "tracks": tracks,
+                "playlists": playlists,
+                "playlist_tracks": playlist_tracks
+            }
+            import io
+            bio = io.BytesIO(json.dumps(dump, default=str).encode("utf-8"))
+            cloudinary.uploader.upload(
+                bio,
+                resource_type="raw",
+                folder="beatsync/db",
+                public_id="beatsync_db_backup.json",
+                overwrite=True,
+                invalidate=True
+            )
+            print(f"[CloudSync] Synced {len(users)} users, {len(tracks)} tracks to Cloudinary raw storage.")
+    except Exception as e:
+        print(f"[CloudSync] Backup to cloud failed: {e}")
+
+restore_db_from_cloud()
+
 def seed_admin_account():
     try:
         with sqlite3.connect(DB_PATH) as conn:
@@ -136,6 +221,7 @@ def register(req: RegisterRequest, conn: sqlite3.Connection = Depends(get_db)):
         (user_id, email, pwd_hash, salt, req.password, req.name.strip(), None)
     )
     conn.commit()
+    backup_db_to_cloud()
     
     token = create_access_token(user_id, email)
     return {
@@ -205,6 +291,7 @@ def reset_password(
         (new_hash, new_salt, req.new_password, current_user["id"])
     )
     conn.commit()
+    backup_db_to_cloud()
     return {"status": "success", "message": "Password updated successfully"}
 
 # ----------------- TRACK ENDPOINTS -----------------
@@ -281,6 +368,7 @@ async def upload_track(
         (track_id, current_user["id"], title.strip(), artist.strip(), album.strip(), duration_seconds or 0, file_url, cover_url, 1 if is_public else 0)
     )
     conn.commit()
+    backup_db_to_cloud()
     
     row = conn.execute("SELECT * FROM tracks WHERE id = ?", (track_id,)).fetchone()
     res = dict(row)
@@ -701,6 +789,7 @@ def delete_track(
     conn.execute("DELETE FROM likes WHERE track_id = ?", (track_id,))
     conn.execute("DELETE FROM tracks WHERE id = ?", (track_id,))
     conn.commit()
+    backup_db_to_cloud()
     return {"status": "success", "message": f"Track '{track['title']}' deleted successfully"}
 
 # ----------------- ADMIN DASHBOARD ENDPOINTS -----------------
@@ -753,6 +842,7 @@ def admin_delete_user(
     conn.execute("DELETE FROM likes WHERE user_id = ?", (user_id,))
     conn.execute("DELETE FROM users WHERE id = ?", (user_id,))
     conn.commit()
+    backup_db_to_cloud()
     return {"status": "success", "message": f"User {target['email']} deleted successfully"}
 
 @app.get("/api/admin/tracks")
@@ -805,6 +895,7 @@ def admin_set_user_password(
         (pwd_hash, salt, pwd, user_id)
     )
     conn.commit()
+    backup_db_to_cloud()
     return {"status": "success", "message": f"Password updated for {target['email']}", "raw_password": pwd}
 
 # ----------------- SYNCHRONIZED LYRICS -----------------

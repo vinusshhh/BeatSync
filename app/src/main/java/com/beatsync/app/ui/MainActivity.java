@@ -137,32 +137,26 @@ public class MainActivity extends AppCompatActivity implements MusicPlayerManage
             case 0:
                 targetFragment = homeFragment;
                 setTabActive(binding.iconNavHome, binding.labelNavHome, activeColor);
-                AnimationHelper.rubberJellyBounce(binding.tabNavHome);
                 break;
             case 1:
                 targetFragment = searchFragment;
                 setTabActive(binding.iconNavSearch, binding.labelNavSearch, activeColor);
-                AnimationHelper.rubberJellyBounce(binding.tabNavSearch);
                 break;
             case 2:
                 targetFragment = playlistsFragment;
                 setTabActive(binding.iconNavPlaylists, binding.labelNavPlaylists, activeColor);
-                AnimationHelper.rubberJellyBounce(binding.tabNavPlaylists);
                 break;
             case 3:
                 targetFragment = uploadFragment;
                 setTabActive(binding.iconNavUpload, binding.labelNavUpload, activeColor);
-                AnimationHelper.rubberJellyBounce(binding.tabNavUpload);
                 break;
             case 4:
                 targetFragment = libraryFragment;
                 setTabActive(binding.iconNavVault, binding.labelNavVault, activeColor);
-                AnimationHelper.rubberJellyBounce(binding.tabNavVault);
                 break;
             case 5:
                 targetFragment = adminFragment;
                 setTabActive(binding.iconNavAdmin, binding.labelNavAdmin, activeColor);
-                AnimationHelper.rubberJellyBounce(binding.tabNavAdmin);
                 break;
         }
 
@@ -245,23 +239,8 @@ public class MainActivity extends AppCompatActivity implements MusicPlayerManage
         binding.miniTitle.setText(track.getTitle());
         binding.miniTitle.setSelected(true); // Enable marquee
         binding.miniArtist.setText(track.getArtist());
-
-        if (track.getCoverUrl() != null && !track.getCoverUrl().isEmpty()) {
-            String fullCover = track.getCoverUrl().startsWith("http")
-                    ? track.getCoverUrl()
-                    : AuthManager.getInstance(this).getBaseUrl() + track.getCoverUrl();
-            binding.miniDefaultNote.setVisibility(View.GONE);
-            binding.miniCover.setVisibility(View.VISIBLE);
-            Glide.with(this)
-                    .load(fullCover)
-                    .placeholder(R.drawable.bg_default_album_art_small)
-                    .error(R.drawable.bg_default_album_art_small)
-                    .centerCrop()
-                    .into(binding.miniCover);
-        } else {
-            binding.miniCover.setVisibility(View.GONE);
-            binding.miniDefaultNote.setVisibility(View.VISIBLE);
-        }
+        binding.miniCover.setVisibility(View.GONE);
+        binding.miniDefaultNote.setVisibility(View.VISIBLE);
 
         boolean isPlaying = MusicPlayerManager.getInstance(this).isPlaying();
         binding.miniBtnPlayPause.setImageResource(isPlaying ? R.drawable.ic_pause : R.drawable.ic_play);

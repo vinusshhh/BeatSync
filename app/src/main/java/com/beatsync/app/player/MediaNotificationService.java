@@ -40,8 +40,8 @@ public class MediaNotificationService extends Service implements MusicPlayerMana
 
     private MediaSessionCompat mediaSession;
     private MusicPlayerManager playerManager;
-    private Bitmap currentCoverBitmap = null;
-    private String currentCoverUrl = null;
+    private Bitmap cachedVinylBitmap = null;
+    private long currentDurationMs = 0;
 
     public static void start(Context context) {
         Intent intent = new Intent(context, MediaNotificationService.class);
@@ -146,36 +146,50 @@ public class MediaNotificationService extends Service implements MusicPlayerMana
         int state = isPlaying ? PlaybackStateCompat.STATE_PLAYING : PlaybackStateCompat.STATE_PAUSED;
         mediaSession.setPlaybackState(new PlaybackStateCompat.Builder()
                 .setActions(actions)
-                .setState(state, positionMs, 1.0f)
+                .setState(state, positionMs, 1.0f, android.os.SystemClock.elapsedRealtime())
                 .build());
     }
 
-    private void updateMetadata(Track track, Bitmap coverBitmap) {
+    private void updateMetadata(Track track, Bitmap coverBitmap, long durationMs) {
         if (mediaSession == null || track == null) return;
+
+        long finalDuration = durationMs > 0 ? durationMs : (long) track.getDurationSeconds() * 1000L;
+        if (finalDuration <= 0 && playerManager != null) {
+            finalDuration = playerManager.getDuration();
+        }
 
         MediaMetadataCompat.Builder metaBuilder = new MediaMetadataCompat.Builder()
                 .putString(MediaMetadataCompat.METADATA_KEY_TITLE, track.getTitle())
                 .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, track.getArtist())
                 .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, track.getAlbum() != null && !track.getAlbum().isEmpty() ? track.getAlbum() : "BeatSync Stream")
-                .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, (long) track.getDurationSeconds() * 1000L);
+                .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, finalDuration);
 
-        if (coverBitmap != null) {
-            metaBuilder.putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, coverBitmap);
+        Bitmap art = coverBitmap != null ? coverBitmap : getDefaultArtBitmap();
+        if (art != null) {
+            metaBuilder.putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, art);
         }
 
         mediaSession.setMetadata(metaBuilder.build());
     }
 
     private Bitmap getDefaultArtBitmap() {
+        if (cachedVinylBitmap != null) return cachedVinylBitmap;
         try {
-            Drawable drawable = ContextCompat.getDrawable(this, R.drawable.bg_default_album_art);
-            if (drawable != null) {
-                Bitmap bitmap = Bitmap.createBitmap(256, 256, Bitmap.Config.ARGB_8888);
-                Canvas canvas = new Canvas(bitmap);
-                drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
-                drawable.draw(canvas);
-                return bitmap;
+            Bitmap bitmap = Bitmap.createBitmap(360, 360, Bitmap.Config.ARGB_8888);
+            Canvas canvas = new Canvas(bitmap);
+            Drawable disc = ContextCompat.getDrawable(this, R.drawable.bg_vinyl_disc);
+            if (disc != null) {
+                disc.setBounds(0, 0, 360, 360);
+                disc.draw(canvas);
             }
+            Drawable label = ContextCompat.getDrawable(this, R.drawable.bg_vinyl_center_label);
+            if (label != null) {
+                int inset = 120;
+                label.setBounds(inset, inset, 360 - inset, 360 - inset);
+                label.draw(canvas);
+            }
+            cachedVinylBitmap = bitmap;
+            return cachedVinylBitmap;
         } catch (Exception ignored) {}
         return null;
     }
@@ -250,46 +264,9 @@ public class MediaNotificationService extends Service implements MusicPlayerMana
         boolean isPlaying = playerManager.isPlaying();
         updatePlaybackState(isPlaying, playerManager.getCurrentPosition());
 
-        String coverUrl = current.getCoverUrl();
-        if (coverUrl != null && !coverUrl.isEmpty()) {
-            if (!coverUrl.equals(currentCoverUrl) || currentCoverBitmap == null) {
-                currentCoverUrl = coverUrl;
-                String fullCover = coverUrl.startsWith("http")
-                        ? coverUrl
-                        : AuthManager.getInstance(this).getBaseUrl() + coverUrl;
-
-                Glide.with(this)
-                        .asBitmap()
-                        .load(fullCover)
-                        .into(new CustomTarget<Bitmap>(300, 300) {
-                            @Override
-                            public void onResourceReady(@NonNull Bitmap resource, @Nullable Transition<? super Bitmap> transition) {
-                                currentCoverBitmap = resource;
-                                updateMetadata(current, currentCoverBitmap);
-                                Notification notification = buildNotification(current, isPlaying, currentCoverBitmap);
-                                startForeground(NOTIFICATION_ID, notification);
-                            }
-
-                            @Override
-                            public void onLoadCleared(@Nullable Drawable placeholder) {}
-
-                            @Override
-                            public void onLoadFailed(@Nullable Drawable errorDrawable) {
-                                currentCoverBitmap = null;
-                                updateMetadata(current, getDefaultArtBitmap());
-                                Notification notification = buildNotification(current, isPlaying, getDefaultArtBitmap());
-                                startForeground(NOTIFICATION_ID, notification);
-                            }
-                        });
-                return;
-            }
-        } else {
-            currentCoverUrl = null;
-            currentCoverBitmap = null;
-        }
-
-        updateMetadata(current, currentCoverBitmap);
-        Notification notification = buildNotification(current, isPlaying, currentCoverBitmap);
+        Bitmap art = getDefaultArtBitmap();
+        updateMetadata(current, art, currentDurationMs);
+        Notification notification = buildNotification(current, isPlaying, art);
         startForeground(NOTIFICATION_ID, notification);
     }
 
@@ -319,8 +296,7 @@ public class MediaNotificationService extends Service implements MusicPlayerMana
 
     @Override
     public void onTrackChanged(Track track) {
-        currentCoverUrl = null;
-        currentCoverBitmap = null;
+        currentDurationMs = track != null ? (long) track.getDurationSeconds() * 1000L : 0;
         updateNotification();
     }
 
@@ -332,8 +308,12 @@ public class MediaNotificationService extends Service implements MusicPlayerMana
 
     @Override
     public void onProgressUpdate(int currentMs, int totalMs) {
-        // Light updates for scrubber precision
+        // Scrubber precision with live elapsedRealtime and duration update
         if (mediaSession != null && playerManager.isPlaying()) {
+            if (totalMs > 0 && Math.abs(currentDurationMs - totalMs) > 1000) {
+                currentDurationMs = totalMs;
+                updateMetadata(playerManager.getCurrentTrack(), getDefaultArtBitmap(), totalMs);
+            }
             mediaSession.setPlaybackState(new PlaybackStateCompat.Builder()
                     .setActions(PlaybackStateCompat.ACTION_PLAY
                             | PlaybackStateCompat.ACTION_PAUSE
@@ -342,7 +322,7 @@ public class MediaNotificationService extends Service implements MusicPlayerMana
                             | PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS
                             | PlaybackStateCompat.ACTION_SEEK_TO
                             | PlaybackStateCompat.ACTION_STOP)
-                    .setState(PlaybackStateCompat.STATE_PLAYING, currentMs, 1.0f)
+                    .setState(PlaybackStateCompat.STATE_PLAYING, currentMs, 1.0f, android.os.SystemClock.elapsedRealtime())
                     .build());
         }
     }

@@ -90,9 +90,13 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.TrackViewHol
 
             boolean isCurrent = playingTrackId != null && playingTrackId.equals(track.getId());
             if (isCurrent) {
+                itemView.setBackgroundResource(R.drawable.bg_track_playing_pebble);
                 binding.tvTitle.setTextColor(ContextCompat.getColor(context, R.color.accent_cyan));
+                binding.ivDefaultNote.setColorFilter(ContextCompat.getColor(context, R.color.accent_cyan));
             } else {
+                itemView.setBackgroundResource(R.drawable.bg_track_normal_selector);
                 binding.tvTitle.setTextColor(ContextCompat.getColor(context, R.color.text_primary));
+                binding.ivDefaultNote.setColorFilter(ContextCompat.getColor(context, R.color.text_secondary));
             }
 
             // Privacy badge
@@ -106,23 +110,8 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.TrackViewHol
                 binding.tvBadge.setTextColor(ContextCompat.getColor(context, R.color.badge_private_text));
             }
 
-            // Cover Art loading
-            if (track.getCoverUrl() != null && !track.getCoverUrl().isEmpty()) {
-                String fullCoverUrl = track.getCoverUrl().startsWith("http")
-                        ? track.getCoverUrl()
-                        : AuthManager.getInstance(context).getBaseUrl() + track.getCoverUrl();
-                binding.ivDefaultNote.setVisibility(View.GONE);
-                binding.ivCover.setVisibility(View.VISIBLE);
-                Glide.with(context)
-                        .load(fullCoverUrl)
-                        .placeholder(R.drawable.bg_default_album_art_small)
-                        .error(R.drawable.bg_default_album_art_small)
-                        .centerCrop()
-                        .into(binding.ivCover);
-            } else {
-                binding.ivCover.setVisibility(View.GONE);
-                binding.ivDefaultNote.setVisibility(View.VISIBLE);
-            }
+            binding.ivCover.setVisibility(View.GONE);
+            binding.ivDefaultNote.setVisibility(View.VISIBLE);
 
             // Clicks with rubber pop
             itemView.setOnClickListener(v -> {

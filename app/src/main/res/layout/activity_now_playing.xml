@@ -91,51 +91,53 @@
         android:layout_marginTop="16dp"
         android:layout_marginBottom="20dp">
 
-        <!-- Album Art Container (Liquid Glass Layout) -->
+        <!-- Album Art Container (Rotating Vinyl Turntable Player) -->
         <com.beatsync.app.ui.custom.LiquidGlassLayout
             android:id="@+id/cardArtContainer"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_gravity="center">
 
-            <RelativeLayout
+            <FrameLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="match_parent"
+                android:layout_gravity="center">
 
-                <ImageView
-                    android:id="@+id/ivBigCover"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:scaleType="centerCrop"
-                    android:contentDescription="Album Art" />
+                <!-- Subtle Ambient Glow behind disc -->
+                <View
+                    android:layout_width="260dp"
+                    android:layout_height="260dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/bg_ambient_lighting"
+                    android:alpha="0.45" />
 
-                <!-- Default Minimal Art Placeholder -->
-                <LinearLayout
-                    android:id="@+id/layoutDefaultArt"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:gravity="center"
-                    android:orientation="vertical">
+                <!-- The Rotating Vinyl Disc -->
+                <FrameLayout
+                    android:id="@+id/layoutVinylDisc"
+                    android:layout_width="260dp"
+                    android:layout_height="260dp"
+                    android:layout_gravity="center"
+                    android:background="@drawable/bg_vinyl_disc">
 
-                    <ImageView
-                        android:id="@+id/ivVinylCenter"
-                        android:layout_width="88dp"
-                        android:layout_height="88dp"
-                        android:src="@drawable/ic_music_note"
-                        android:tint="#D9FFFFFF"
-                        android:contentDescription="Music Track" />
+                    <!-- Center Label Badge -->
+                    <FrameLayout
+                        android:layout_width="92dp"
+                        android:layout_height="92dp"
+                        android:layout_gravity="center"
+                        android:background="@drawable/bg_vinyl_center_label">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="BEATSYNC AUDIO"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="11sp"
-                        android:letterSpacing="0.14"
-                        android:layout_marginTop="16dp" />
-                </LinearLayout>
+                        <ImageView
+                            android:id="@+id/ivVinylCenter"
+                            android:layout_width="32dp"
+                            android:layout_height="32dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_music_note"
+                            android:tint="#FFFFFF"
+                            android:contentDescription="Music Track" />
+                    </FrameLayout>
+                </FrameLayout>
 
-            </RelativeLayout>
+            </FrameLayout>
         </com.beatsync.app.ui.custom.LiquidGlassLayout>
 
         <!-- Lyrics Container (Liquid Glass Layout with edge fade masks) -->
@@ -274,17 +276,6 @@
                     android:ellipsize="end" />
             </LinearLayout>
         </LinearLayout>
-
-        <!-- Like Button -->
-        <ImageView
-            android:id="@+id/btnLike"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
-            android:padding="8dp"
-            android:src="@drawable/ic_heart"
-            android:tint="@color/text_secondary"
-            android:background="?attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Like Track" />
     </LinearLayout>
 
     <!-- Timeline & Seekbar -->

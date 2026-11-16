@@ -166,7 +166,7 @@
                 android:layout_weight="1"
                 android:orientation="vertical"
                 android:gravity="center"
-                android:background="?attr/selectableItemBackgroundBorderless">
+                android:background="@android:color/transparent">
 
                 <ImageView
                     android:id="@+id/iconNavHome"
@@ -195,7 +195,7 @@
                 android:layout_weight="1"
                 android:orientation="vertical"
                 android:gravity="center"
-                android:background="?attr/selectableItemBackgroundBorderless">
+                android:background="@android:color/transparent">
 
                 <ImageView
                     android:id="@+id/iconNavSearch"
@@ -223,7 +223,7 @@
                 android:layout_weight="1"
                 android:orientation="vertical"
                 android:gravity="center"
-                android:background="?attr/selectableItemBackgroundBorderless">
+                android:background="@android:color/transparent">
 
                 <ImageView
                     android:id="@+id/iconNavPlaylists"
@@ -251,7 +251,7 @@
                 android:layout_weight="1"
                 android:orientation="vertical"
                 android:gravity="center"
-                android:background="?attr/selectableItemBackgroundBorderless">
+                android:background="@android:color/transparent">
 
                 <ImageView
                     android:id="@+id/iconNavUpload"
@@ -279,7 +279,7 @@
                 android:layout_weight="1"
                 android:orientation="vertical"
                 android:gravity="center"
-                android:background="?attr/selectableItemBackgroundBorderless">
+                android:background="@android:color/transparent">
 
                 <ImageView
                     android:id="@+id/iconNavVault"
@@ -307,7 +307,7 @@
                 android:layout_weight="1"
                 android:orientation="vertical"
                 android:gravity="center"
-                android:background="?attr/selectableItemBackgroundBorderless"
+                android:background="@android:color/transparent"
                 android:visibility="gone">
 
                 <ImageView

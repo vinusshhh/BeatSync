@@ -73,7 +73,6 @@ public class NowPlayingActivity extends AppCompatActivity implements MusicPlayer
 
         binding.btnPlayPauseContainer.setOnClickListener(v -> {
             AnimationHelper.rubberPop(binding.btnPlayPauseContainer);
-            AnimationHelper.rubberJellyBounce(binding.ivBigCover);
             playerManager.togglePlayPause();
         });
 
@@ -97,26 +96,6 @@ public class NowPlayingActivity extends AppCompatActivity implements MusicPlayer
             AnimationHelper.rubberPop(binding.btnRepeat);
             playerManager.cycleRepeatMode();
             updateRepeatButton();
-        });
-
-        binding.btnLike.setOnClickListener(v -> {
-            AnimationHelper.rubberJellyBounce(binding.btnLike);
-            Track current = playerManager.getCurrentTrack();
-            if (current != null) {
-                ApiClient.getInstance(this).toggleLike(current.getId(), new ApiClient.ApiCallback<Boolean>() {
-                    @Override
-                    public void onSuccess(Boolean isLiked) {
-                        current.setLiked(isLiked);
-                        updateLikeButton(isLiked);
-                        Toast.makeText(NowPlayingActivity.this, isLiked ? "Saved to Liked Songs" : "Removed from Liked Songs", Toast.LENGTH_SHORT).show();
-                    }
-
-                    @Override
-                    public void onError(String error) {
-                        Toast.makeText(NowPlayingActivity.this, "Error: " + error, Toast.LENGTH_SHORT).show();
-                    }
-                });
-            }
         });
 
         binding.btnAddToPlaylist.setOnClickListener(v -> {
@@ -173,11 +152,10 @@ public class NowPlayingActivity extends AppCompatActivity implements MusicPlayer
         AnimationHelper.addPressScaleEffect(binding.btnPrevious);
         AnimationHelper.addPressScaleEffect(binding.btnShuffle);
         AnimationHelper.addPressScaleEffect(binding.btnRepeat);
-        AnimationHelper.addPressScaleEffect(binding.btnLike);
         AnimationHelper.addPressScaleEffect(binding.btnAddToPlaylist);
         AnimationHelper.addPressScaleEffect(binding.btnToggleLyrics);
 
-        vinylAnimator = AnimationHelper.createContinuousRotation(binding.ivVinylCenter, 24000);
+        vinylAnimator = AnimationHelper.createContinuousRotation(binding.layoutVinylDisc, 12000);
         if (vinylAnimator != null && playerManager.isPlaying()) {
             vinylAnimator.start();
         }
@@ -301,28 +279,9 @@ public class NowPlayingActivity extends AppCompatActivity implements MusicPlayer
             binding.tvPrivacyBadge.setTextColor(ContextCompat.getColor(this, R.color.badge_private_text));
         }
 
-        // Cover Art
-        if (track.getCoverUrl() != null && !track.getCoverUrl().isEmpty()) {
-            String fullCover = track.getCoverUrl().startsWith("http")
-                    ? track.getCoverUrl()
-                    : AuthManager.getInstance(this).getBaseUrl() + track.getCoverUrl();
-            binding.layoutDefaultArt.setVisibility(View.GONE);
-            binding.ivBigCover.setVisibility(View.VISIBLE);
-            Glide.with(this)
-                    .load(fullCover)
-                    .placeholder(R.drawable.bg_default_album_art)
-                    .error(R.drawable.bg_default_album_art)
-                    .centerCrop()
-                    .into(binding.ivBigCover);
-        } else {
-            binding.ivBigCover.setVisibility(View.GONE);
-            binding.layoutDefaultArt.setVisibility(View.VISIBLE);
-        }
-
         updatePlayPauseButton(playerManager.isPlaying());
         updateShuffleButton();
         updateRepeatButton();
-        updateLikeButton(track.isLiked());
 
         // Load Synced Lyrics
         fetchLyrics(track);
@@ -358,19 +317,12 @@ public class NowPlayingActivity extends AppCompatActivity implements MusicPlayer
         if (mode == MusicPlayerManager.RepeatMode.OFF) {
             binding.btnRepeat.setColorFilter(ContextCompat.getColor(this, R.color.text_tertiary));
             binding.btnRepeat.setImageResource(R.drawable.ic_repeat);
+        } else if (mode == MusicPlayerManager.RepeatMode.ONE) {
+            binding.btnRepeat.setColorFilter(ContextCompat.getColor(this, R.color.accent_cyan));
+            binding.btnRepeat.setImageResource(R.drawable.ic_repeat_one);
         } else {
             binding.btnRepeat.setColorFilter(ContextCompat.getColor(this, R.color.accent_cyan));
             binding.btnRepeat.setImageResource(R.drawable.ic_repeat);
-        }
-    }
-
-    private void updateLikeButton(boolean isLiked) {
-        if (isLiked) {
-            binding.btnLike.setImageResource(R.drawable.ic_heart_filled);
-            binding.btnLike.setColorFilter(ContextCompat.getColor(this, R.color.accent_rose));
-        } else {
-            binding.btnLike.setImageResource(R.drawable.ic_heart);
-            binding.btnLike.setColorFilter(ContextCompat.getColor(this, R.color.text_secondary));
         }
     }
 

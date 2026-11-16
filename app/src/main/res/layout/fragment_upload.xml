@@ -250,61 +250,6 @@
                     android:letterSpacing="0.08" />
             </LinearLayout>
 
-            <!-- Optional Cover Art Picker -->
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="COVER ART (OPTIONAL)"
-                android:textColor="@color/text_secondary"
-                android:textSize="11sp"
-                android:textStyle="bold"
-                android:letterSpacing="0.08"
-                android:layout_marginTop="18dp"
-                android:layout_marginBottom="8dp" />
-
-            <LinearLayout
-                android:id="@+id/btnPickCover"
-                android:layout_width="match_parent"
-                android:layout_height="60dp"
-                android:background="@drawable/bg_liquid_glass_card"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
-                android:clickable="true"
-                android:focusable="true">
-
-                <ImageView
-                    android:id="@+id/ivCoverPreview"
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
-                    android:scaleType="centerCrop"
-                    android:src="@drawable/ic_library"
-                    android:tint="@color/text_secondary"
-                    android:contentDescription="Cover Preview" />
-
-                <TextView
-                    android:id="@+id/tvCoverFileName"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Select Cover Artwork (JPG, PNG)"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="13sp"
-                    android:singleLine="true"
-                    android:ellipsize="middle"
-                    android:layout_marginStart="14dp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="UPLOAD"
-                    android:textColor="@color/text_secondary"
-                    android:textSize="11sp"
-                    android:textStyle="bold"
-                    android:letterSpacing="0.08" />
-            </LinearLayout>
-
             <!-- Status / Error message -->
             <TextView
                 android:id="@+id/tvStatus"
@@ -336,6 +281,71 @@
                 android:layout_gravity="center"
                 android:indeterminateTint="@color/accent_cyan"
                 android:layout_marginTop="16dp"
+                android:visibility="gone" />
+
+            <!-- Bulk Upload Divider & Section -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="#1AFFFFFF"
+                android:layout_marginTop="28dp"
+                android:layout_marginBottom="24dp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="BATCH UPLOAD"
+                android:textColor="@color/accent_cyan"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.12" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Select and upload multiple audio tracks simultaneously."
+                android:textColor="@color/text_secondary"
+                android:textSize="12sp"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="12dp" />
+
+            <!-- Bulk Upload Action Button (Liquid Glass) -->
+            <LinearLayout
+                android:id="@+id/btnBulkUpload"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:background="@drawable/bg_liquid_glass_card"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:clickable="true"
+                android:focusable="true">
+
+                <ImageView
+                    android:layout_width="22dp"
+                    android:layout_height="22dp"
+                    android:src="@drawable/ic_upload"
+                    android:tint="@color/accent_cyan"
+                    android:contentDescription="Bulk Upload" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="UPLOAD SONGS IN BULK"
+                    android:textColor="@color/text_primary"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.08"
+                    android:layout_marginStart="12dp" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tvBulkStatus"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textColor="@color/accent_cyan"
+                android:textSize="12sp"
+                android:layout_marginTop="10dp"
                 android:visibility="gone" />
 
         </LinearLayout>

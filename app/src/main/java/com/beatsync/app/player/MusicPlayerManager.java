@@ -265,10 +265,6 @@ public class MusicPlayerManager {
 
     public void playPrevious() {
         if (playlistQueue.isEmpty()) return;
-        if (mediaPlayer != null && mediaPlayer.getCurrentPosition() > 3000) {
-            seekTo(0);
-            return;
-        }
 
         if (currentIndex > 0) {
             currentIndex--;

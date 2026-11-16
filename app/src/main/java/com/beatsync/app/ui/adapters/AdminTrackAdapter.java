@@ -69,22 +69,8 @@ public class AdminTrackAdapter extends RecyclerView.Adapter<AdminTrackAdapter.Tr
             holder.tvBadge.setTextColor(ContextCompat.getColor(context, R.color.badge_private_text));
         }
 
-        if (track.getCoverUrl() != null && !track.getCoverUrl().isEmpty()) {
-            String fullCover = track.getCoverUrl().startsWith("http")
-                    ? track.getCoverUrl()
-                    : AuthManager.getInstance(context).getBaseUrl() + track.getCoverUrl();
-            holder.ivNote.setVisibility(View.GONE);
-            holder.ivCover.setVisibility(View.VISIBLE);
-            Glide.with(context)
-                    .load(fullCover)
-                    .placeholder(R.drawable.bg_default_album_art_small)
-                    .error(R.drawable.bg_default_album_art_small)
-                    .centerCrop()
-                    .into(holder.ivCover);
-        } else {
-            holder.ivCover.setVisibility(View.GONE);
-            holder.ivNote.setVisibility(View.VISIBLE);
-        }
+        holder.ivCover.setVisibility(View.GONE);
+        holder.ivNote.setVisibility(View.VISIBLE);
 
         holder.btnPlay.setOnClickListener(v -> {
             if (listener != null) {

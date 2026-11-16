@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Vinyl Center Label Body -->
+    <item>
+        <shape android:shape="oval">
+            <gradient
+                android:type="radial"
+                android:gradientRadius="48dp"
+                android:startColor="#22D3EE"
+                android:centerColor="#0284C7"
+                android:endColor="#0F172A" />
+            <stroke
+                android:width="2dp"
+                android:color="#B3FFFFFF" />
+        </shape>
+    </item>
+
+    <!-- Center Spindle Hole Rim -->
+    <item
+        android:bottom="34dp"
+        android:left="34dp"
+        android:right="34dp"
+        android:top="34dp">
+        <shape android:shape="oval">
+            <solid android:color="#0B0D14" />
+            <stroke
+                android:width="1.5dp"
+                android:color="#99FFFFFF" />
+        </shape>
+    </item>
+</layer-list>

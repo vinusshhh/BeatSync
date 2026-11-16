@@ -22,13 +22,12 @@ import com.beatsync.app.databinding.FragmentUploadBinding;
 import com.beatsync.app.models.Track;
 import com.beatsync.app.models.User;
 import com.beatsync.app.ui.utils.AnimationHelper;
-import com.bumptech.glide.Glide;
+import java.util.List;
 
 public class UploadFragment extends Fragment {
 
     private FragmentUploadBinding binding;
     private Uri selectedAudioUri = null;
-    private Uri selectedCoverUri = null;
 
     private final ActivityResultLauncher<String> audioPickerLauncher =
             registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
@@ -57,14 +56,10 @@ public class UploadFragment extends Fragment {
                 }
             });
 
-    private final ActivityResultLauncher<String> coverPickerLauncher =
-            registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
-                if (uri != null) {
-                    selectedCoverUri = uri;
-                    String fileName = getFileName(uri);
-                    binding.tvCoverFileName.setText(fileName != null ? fileName : "cover.jpg");
-                    binding.tvCoverFileName.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_primary));
-                    Glide.with(requireContext()).load(uri).centerCrop().into(binding.ivCoverPreview);
+    private final ActivityResultLauncher<String> bulkAudioPickerLauncher =
+            registerForActivityResult(new ActivityResultContracts.GetMultipleContents(), uris -> {
+                if (uris != null && !uris.isEmpty()) {
+                    startBulkUpload(uris);
                 }
             });
 
@@ -113,9 +108,14 @@ public class UploadFragment extends Fragment {
         });
 
         binding.btnPickAudio.setOnClickListener(v -> audioPickerLauncher.launch("audio/*"));
-        binding.btnPickCover.setOnClickListener(v -> coverPickerLauncher.launch("image/*"));
-
         binding.btnSubmitUpload.setOnClickListener(v -> startUpload());
+
+        // Bulk Upload Button
+        binding.btnBulkUpload.setOnClickListener(v -> {
+            AnimationHelper.rubberPop(binding.btnBulkUpload);
+            bulkAudioPickerLauncher.launch("audio/*");
+        });
+
         AnimationHelper.animateRubberEntrance(view);
     }
 
@@ -165,7 +165,7 @@ public class UploadFragment extends Fragment {
                 "Single",
                 isPublic,
                 selectedAudioUri,
-                selectedCoverUri,
+                null,
                 new ApiClient.ApiCallback<Track>() {
                     @Override
                     public void onSuccess(Track track) {
@@ -181,12 +181,8 @@ public class UploadFragment extends Fragment {
                         // Reset form
                         binding.etTrackTitle.setText("");
                         selectedAudioUri = null;
-                        selectedCoverUri = null;
                         binding.tvAudioFileName.setText("Select Audio File from Device");
                         binding.tvAudioFileName.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary));
-                        binding.tvCoverFileName.setText("Select Cover Artwork (JPG, PNG)");
-                        binding.tvCoverFileName.setTextColor(ContextCompat.getColor(requireContext(), R.color.text_secondary));
-                        binding.ivCoverPreview.setImageResource(R.drawable.ic_library);
 
                         // Switch to Library tab to see the track
                         if (getActivity() instanceof MainActivity) {
@@ -201,6 +197,88 @@ public class UploadFragment extends Fragment {
                         binding.btnSubmitUpload.setEnabled(true);
                         binding.tvStatus.setText("Upload failed: " + error);
                         binding.tvStatus.setVisibility(View.VISIBLE);
+                    }
+                }
+        );
+    }
+
+    private void startBulkUpload(List<Uri> uris) {
+        if (uris == null || uris.isEmpty()) return;
+
+        boolean isPublic = binding.switchPrivacy.isChecked();
+        User currentUser = AuthManager.getInstance(requireContext()).getUser();
+        String defaultArtist = (currentUser != null && currentUser.getName() != null) ? currentUser.getName() : "BeatSync Artist";
+
+        binding.uploadProgress.setVisibility(View.VISIBLE);
+        binding.btnSubmitUpload.setEnabled(false);
+        binding.btnBulkUpload.setEnabled(false);
+        binding.tvBulkStatus.setVisibility(View.VISIBLE);
+
+        uploadBulkSequentially(uris, 0, 0, defaultArtist, isPublic);
+    }
+
+    private void uploadBulkSequentially(List<Uri> uris, int index, int successCount, String fallbackArtist, boolean isPublic) {
+        if (index >= uris.size()) {
+            // Finished all
+            if (binding == null) return;
+            binding.uploadProgress.setVisibility(View.GONE);
+            binding.btnSubmitUpload.setEnabled(true);
+            binding.btnBulkUpload.setEnabled(true);
+            binding.tvBulkStatus.setText("Bulk upload complete: " + successCount + "/" + uris.size() + " songs uploaded!");
+
+            Toast.makeText(requireContext(), "Bulk upload finished! " + successCount + " tracks added.", Toast.LENGTH_LONG).show();
+
+            if (getActivity() instanceof MainActivity) {
+                ((MainActivity) getActivity()).selectTab(R.id.nav_library);
+            }
+            return;
+        }
+
+        Uri uri = uris.get(index);
+        String fileName = getFileName(uri);
+        String songTitle = "Track " + (index + 1);
+        String songArtist = fallbackArtist;
+
+        if (fileName != null) {
+            String cleanName = fileName.replaceAll("\\.[^.]+$", "");
+            String stripped = cleanName.replaceAll("(?i)[\\[\\(].*?[\\]\\)]", " ").trim();
+            String[] parts = stripped.split("\\s*[-|•:]\\s*");
+            if (parts.length >= 2) {
+                songTitle = parts[0].replaceAll("(?i)\\b(audio song|video song|full song|official video|official audio|lyrics|remix|hd|4k)\\b", "").replaceAll("\\s+", " ").trim();
+                songArtist = parts[1].replaceAll("(?i)\\b(audio song|video song|full song|official video|official audio|lyrics|remix|hd|4k)\\b", "").replaceAll("\\s+", " ").trim();
+                if (songTitle.isEmpty()) songTitle = parts[0].trim();
+                if (songArtist.isEmpty()) songArtist = fallbackArtist;
+            } else {
+                songTitle = stripped.replaceAll("(?i)\\b(audio song|video song|full song|official video|official audio|lyrics|remix|hd|4k)\\b", "").replaceAll("\\s+", " ").trim();
+                if (songTitle.isEmpty()) songTitle = cleanName;
+            }
+        }
+
+        final int nextIndex = index + 1;
+        final String finalTitle = songTitle;
+        final String finalArtist = songArtist;
+
+        if (binding != null) {
+            binding.tvBulkStatus.setText("Uploading " + nextIndex + " of " + uris.size() + ": \"" + finalTitle + "\"...");
+        }
+
+        ApiClient.getInstance(requireContext()).uploadTrack(
+                finalTitle,
+                finalArtist,
+                "Single",
+                isPublic,
+                uri,
+                null,
+                new ApiClient.ApiCallback<Track>() {
+                    @Override
+                    public void onSuccess(Track track) {
+                        uploadBulkSequentially(uris, nextIndex, successCount + 1, fallbackArtist, isPublic);
+                    }
+
+                    @Override
+                    public void onError(String error) {
+                        // Continue to next track even if one fails
+                        uploadBulkSequentially(uris, nextIndex, successCount, fallbackArtist, isPublic);
                     }
                 }
         );
