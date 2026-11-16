@@ -435,6 +435,45 @@ public class ApiClient {
         executeGenericCall(request, type, callback);
     }
 
+    public void updateTrack(String trackId, String title, String artist, String album, boolean isPublic, ApiCallback<Track> callback) {
+        java.util.Map<String, Object> map = new java.util.HashMap<>();
+        if (title != null) map.put("title", title);
+        if (artist != null) map.put("artist", artist);
+        if (album != null) map.put("album", album);
+        map.put("is_public", isPublic);
+
+        String json = gson.toJson(map);
+        RequestBody body = RequestBody.create(json, MediaType.parse("application/json; charset=utf-8"));
+        Request request = newAuthenticatedRequest("/api/tracks/" + trackId).put(body).build();
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                dispatchError(callback, "Network error: " + e.getMessage());
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                String responseBody = response.body() != null ? response.body().string() : "";
+                if (!response.isSuccessful()) {
+                    dispatchError(callback, extractError(responseBody, response.code()));
+                    return;
+                }
+                try {
+                    com.google.gson.JsonObject obj = gson.fromJson(responseBody, com.google.gson.JsonObject.class);
+                    if (obj != null && obj.has("track")) {
+                        Track track = gson.fromJson(obj.get("track"), Track.class);
+                        dispatchSuccess(callback, track);
+                    } else {
+                        Track track = gson.fromJson(responseBody, Track.class);
+                        dispatchSuccess(callback, track);
+                    }
+                } catch (Exception e) {
+                    dispatchError(callback, "Parse error: " + e.getMessage());
+                }
+            }
+        });
+    }
+
     public void adminDeleteTrack(String trackId, ApiCallback<String> callback) {
         Request request = newAuthenticatedRequest("/api/admin/tracks/" + trackId).delete().build();
         client.newCall(request).enqueue(new Callback() {

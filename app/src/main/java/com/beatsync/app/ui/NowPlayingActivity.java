@@ -30,8 +30,6 @@ public class NowPlayingActivity extends AppCompatActivity implements MusicPlayer
 
     private ActivityNowPlayingBinding binding;
     private MusicPlayerManager playerManager;
-    private ObjectAnimator vinylAnimator;
-    private ObjectAnimator liquidBreathingAnimator;
     private boolean isUserSeeking = false;
     private boolean isLyricsMode = false;
     private String currentLyricsTrackId = null;
@@ -155,14 +153,8 @@ public class NowPlayingActivity extends AppCompatActivity implements MusicPlayer
         AnimationHelper.addPressScaleEffect(binding.btnAddToPlaylist);
         AnimationHelper.addPressScaleEffect(binding.btnToggleLyrics);
 
-        vinylAnimator = AnimationHelper.createContinuousRotation(binding.layoutVinylDisc, 12000);
-        if (vinylAnimator != null && playerManager.isPlaying()) {
-            vinylAnimator.start();
-        }
-
-        liquidBreathingAnimator = AnimationHelper.createLiquidBreathing(binding.cardArtContainer);
-        if (liquidBreathingAnimator != null && playerManager.isPlaying()) {
-            liquidBreathingAnimator.start();
+        if (binding.musicPulseVisualizer != null) {
+            binding.musicPulseVisualizer.setPlaying(playerManager.isPlaying());
         }
     }
 
@@ -254,12 +246,6 @@ public class NowPlayingActivity extends AppCompatActivity implements MusicPlayer
     protected void onDestroy() {
         super.onDestroy();
         playerManager.removeListener(this);
-        if (vinylAnimator != null) {
-            vinylAnimator.cancel();
-        }
-        if (liquidBreathingAnimator != null) {
-            liquidBreathingAnimator.cancel();
-        }
     }
 
     private void updateUi(Track track) {
@@ -289,21 +275,8 @@ public class NowPlayingActivity extends AppCompatActivity implements MusicPlayer
 
     private void updatePlayPauseButton(boolean isPlaying) {
         binding.btnPlayPause.setImageResource(isPlaying ? R.drawable.ic_pause : R.drawable.ic_play);
-        if (vinylAnimator != null) {
-            if (isPlaying) {
-                if (vinylAnimator.isPaused()) vinylAnimator.resume();
-                else if (!vinylAnimator.isStarted()) vinylAnimator.start();
-            } else {
-                if (vinylAnimator.isRunning()) vinylAnimator.pause();
-            }
-        }
-        if (liquidBreathingAnimator != null) {
-            if (isPlaying) {
-                if (liquidBreathingAnimator.isPaused()) liquidBreathingAnimator.resume();
-                else if (!liquidBreathingAnimator.isStarted()) liquidBreathingAnimator.start();
-            } else {
-                if (liquidBreathingAnimator.isRunning()) liquidBreathingAnimator.pause();
-            }
+        if (binding.musicPulseVisualizer != null) {
+            binding.musicPulseVisualizer.setPlaying(isPlaying);
         }
     }
 

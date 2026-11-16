@@ -156,32 +156,87 @@ public class HomeFragment extends Fragment implements MusicPlayerManager.Playbac
 
     private void showTrackOptions(Track track, View anchor) {
         PopupMenu popup = new PopupMenu(requireContext(), anchor);
-        popup.getMenu().add(0, 1, 0, track.isLiked() ? "Unlike Track" : "Like Track");
-        popup.getMenu().add(0, 2, 1, "Add to Playlist");
+        popup.getMenu().add(0, 1, 0, "Add to Playlist");
+
+        boolean isAdmin = AuthManager.getInstance(requireContext()).isAdmin();
+        if (isAdmin) {
+            popup.getMenu().add(0, 2, 1, "Edit Track Details");
+        }
 
         popup.setOnMenuItemClickListener(item -> {
             if (item.getItemId() == 1) {
-                ApiClient.getInstance(requireContext()).toggleLike(track.getId(), new ApiClient.ApiCallback<Boolean>() {
-                    @Override
-                    public void onSuccess(Boolean isLiked) {
-                        track.setLiked(isLiked);
-                        trackAdapter.notifyDataSetChanged();
-                        Toast.makeText(requireContext(), isLiked ? "Saved to Liked Songs" : "Removed from Liked Songs", Toast.LENGTH_SHORT).show();
-                    }
-
-                    @Override
-                    public void onError(String error) {
-                        Toast.makeText(requireContext(), "Error: " + error, Toast.LENGTH_SHORT).show();
-                    }
-                });
+                showAddToPlaylistDialog(track);
                 return true;
             } else if (item.getItemId() == 2) {
-                showAddToPlaylistDialog(track);
+                showEditTrackDialog(track);
                 return true;
             }
             return false;
         });
         popup.show();
+    }
+
+    private void showEditTrackDialog(Track track) {
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_edit_track, null);
+        AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                .setView(dialogView)
+                .create();
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
+        android.widget.EditText etTitle = dialogView.findViewById(R.id.etEditTitle);
+        android.widget.EditText etArtist = dialogView.findViewById(R.id.etEditArtist);
+        android.widget.EditText etAlbum = dialogView.findViewById(R.id.etEditAlbum);
+        androidx.appcompat.widget.SwitchCompat switchPublic = dialogView.findViewById(R.id.switchEditPublic);
+        View btnCancel = dialogView.findViewById(R.id.btnCancelEdit);
+        View btnSave = dialogView.findViewById(R.id.btnSaveEdit);
+
+        etTitle.setText(track.getTitle());
+        etArtist.setText(track.getArtist());
+        etAlbum.setText(track.getAlbum() != null ? track.getAlbum() : "Single");
+        switchPublic.setChecked(track.isPublic());
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        btnSave.setOnClickListener(v -> {
+            String newTitle = etTitle.getText().toString().trim();
+            String newArtist = etArtist.getText().toString().trim();
+            String newAlbum = etAlbum.getText().toString().trim();
+            boolean isPublic = switchPublic.isChecked();
+
+            if (newTitle.isEmpty()) {
+                etTitle.setError("Title required");
+                etTitle.requestFocus();
+                return;
+            }
+            if (newArtist.isEmpty()) {
+                etArtist.setError("Artist required");
+                etArtist.requestFocus();
+                return;
+            }
+
+            btnSave.setEnabled(false);
+            ApiClient.getInstance(requireContext()).updateTrack(track.getId(), newTitle, newArtist, newAlbum, isPublic, new ApiClient.ApiCallback<Track>() {
+                @Override
+                public void onSuccess(Track updated) {
+                    if (!isAdded()) return;
+                    Toast.makeText(requireContext(), "Track updated successfully", Toast.LENGTH_SHORT).show();
+                    dialog.dismiss();
+                    loadTracks();
+                }
+
+                @Override
+                public void onError(String error) {
+                    if (!isAdded()) return;
+                    btnSave.setEnabled(true);
+                    Toast.makeText(requireContext(), "Failed to update: " + error, Toast.LENGTH_SHORT).show();
+                }
+            });
+        });
+
+        dialog.show();
     }
 
     private void showAddToPlaylistDialog(Track track) {

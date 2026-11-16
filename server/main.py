@@ -91,6 +91,8 @@ def restore_db_from_cloud():
                         """, (
                             pt["playlist_id"], pt["track_id"], pt.get("added_at")
                         ))
+                    # Purge any legacy initial test/demo tracks permanently
+                    cursor.execute("DELETE FROM tracks WHERE id LIKE 'track-%' OR title LIKE '%Silicon Pulse%' OR title LIKE '%Minimal Horizon%' OR title LIKE '%Obsidian Night%' OR title LIKE '%Studio Session%'")
                     conn.commit()
                 print(f"[CloudSync] Restored {len(dump.get('users', []))} users and {len(dump.get('tracks', []))} tracks from Cloudinary backup.")
     except Exception as e:
@@ -130,6 +132,17 @@ def backup_db_to_cloud():
         print(f"[CloudSync] Backup to cloud failed: {e}")
 
 restore_db_from_cloud()
+
+def purge_test_tracks():
+    try:
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM tracks WHERE id LIKE 'track-%' OR title LIKE '%Silicon Pulse%' OR title LIKE '%Minimal Horizon%' OR title LIKE '%Obsidian Night%' OR title LIKE '%Studio Session%'")
+            conn.commit()
+    except Exception as e:
+        print(f"Error purging test tracks: {e}")
+
+purge_test_tracks()
 
 def seed_admin_account():
     try:
@@ -845,13 +858,63 @@ def admin_delete_user(
     backup_db_to_cloud()
     return {"status": "success", "message": f"User {target['email']} deleted successfully"}
 
+class TrackUpdateRequest(BaseModel):
+    title: Optional[str] = None
+    artist: Optional[str] = None
+    album: Optional[str] = None
+    is_public: Optional[bool] = None
+
+@app.put("/api/tracks/{track_id}")
+@app.put("/api/admin/tracks/{track_id}")
+def update_track(
+    track_id: str,
+    req: TrackUpdateRequest,
+    current_user: dict = Depends(get_current_user),
+    conn: sqlite3.Connection = Depends(get_db)
+):
+    track = conn.execute("SELECT * FROM tracks WHERE id = ?", (track_id,)).fetchone()
+    if not track:
+        raise HTTPException(status_code=404, detail="Track not found")
+
+    is_admin = current_user.get("is_admin", False)
+    if track["user_id"] != current_user["id"] and not is_admin:
+        raise HTTPException(status_code=403, detail="You do not have permission to edit this track")
+
+    new_title = req.title.strip() if req.title and req.title.strip() else track["title"]
+    new_artist = req.artist.strip() if req.artist and req.artist.strip() else track["artist"]
+    new_album = req.album.strip() if req.album is not None else track["album"]
+    new_is_public = track["is_public"]
+    if req.is_public is not None:
+        new_is_public = 1 if req.is_public else 0
+
+    conn.execute(
+        """
+        UPDATE tracks
+        SET title = ?, artist = ?, album = ?, is_public = ?
+        WHERE id = ?
+        """,
+        (new_title, new_artist, new_album, new_is_public, track_id)
+    )
+    conn.commit()
+    backup_db_to_cloud()
+
+    row = conn.execute("""
+        SELECT t.*, COALESCE(u.name, 'Admin') as uploader_name
+        FROM tracks t
+        LEFT JOIN users u ON t.user_id = u.id
+        WHERE t.id = ?
+    """, (track_id,)).fetchone()
+    d = dict(row)
+    d["is_public"] = bool(d["is_public"])
+    return {"status": "success", "message": "Track updated successfully", "track": d}
+
 @app.get("/api/admin/tracks")
 def admin_get_all_tracks(
     admin: dict = Depends(get_admin_user),
     conn: sqlite3.Connection = Depends(get_db)
 ):
     rows = conn.execute("""
-        SELECT t.*, u.name as uploader_name, u.email as uploader_email
+        SELECT t.*, COALESCE(u.name, 'Admin') as uploader_name, COALESCE(u.email, '') as uploader_email
         FROM tracks t
         LEFT JOIN users u ON t.user_id = u.id
         ORDER BY t.created_at DESC

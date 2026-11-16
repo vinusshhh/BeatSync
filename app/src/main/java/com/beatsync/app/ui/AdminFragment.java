@@ -87,6 +87,11 @@ public class AdminFragment extends Fragment {
             }
 
             @Override
+            public void onEditTrack(Track track) {
+                showAdminEditTrackDialog(track);
+            }
+
+            @Override
             public void onDeleteTrack(Track track) {
                 confirmDeleteTrack(track);
             }
@@ -250,6 +255,69 @@ public class AdminFragment extends Fragment {
                 })
                 .setNegativeButton("Cancel", null)
                 .show();
+    }
+
+    private void showAdminEditTrackDialog(Track track) {
+        View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_edit_track, null);
+        AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                .setView(dialogView)
+                .create();
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
+        android.widget.EditText etTitle = dialogView.findViewById(R.id.etEditTitle);
+        android.widget.EditText etArtist = dialogView.findViewById(R.id.etEditArtist);
+        android.widget.EditText etAlbum = dialogView.findViewById(R.id.etEditAlbum);
+        androidx.appcompat.widget.SwitchCompat switchPublic = dialogView.findViewById(R.id.switchEditPublic);
+        View btnCancel = dialogView.findViewById(R.id.btnCancelEdit);
+        View btnSave = dialogView.findViewById(R.id.btnSaveEdit);
+
+        etTitle.setText(track.getTitle());
+        etArtist.setText(track.getArtist());
+        etAlbum.setText(track.getAlbum() != null ? track.getAlbum() : "Single");
+        switchPublic.setChecked(track.isPublic());
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        btnSave.setOnClickListener(v -> {
+            String newTitle = etTitle.getText().toString().trim();
+            String newArtist = etArtist.getText().toString().trim();
+            String newAlbum = etAlbum.getText().toString().trim();
+            boolean isPublic = switchPublic.isChecked();
+
+            if (newTitle.isEmpty()) {
+                etTitle.setError("Title required");
+                etTitle.requestFocus();
+                return;
+            }
+            if (newArtist.isEmpty()) {
+                etArtist.setError("Artist required");
+                etArtist.requestFocus();
+                return;
+            }
+
+            btnSave.setEnabled(false);
+            ApiClient.getInstance(requireContext()).updateTrack(track.getId(), newTitle, newArtist, newAlbum, isPublic, new ApiClient.ApiCallback<Track>() {
+                @Override
+                public void onSuccess(Track updated) {
+                    if (!isAdded()) return;
+                    Toast.makeText(requireContext(), "Track updated successfully", Toast.LENGTH_SHORT).show();
+                    dialog.dismiss();
+                    loadData();
+                }
+
+                @Override
+                public void onError(String error) {
+                    if (!isAdded()) return;
+                    btnSave.setEnabled(true);
+                    Toast.makeText(requireContext(), "Failed to update: " + error, Toast.LENGTH_SHORT).show();
+                }
+            });
+        });
+
+        dialog.show();
     }
 
     private void confirmDeleteTrack(Track track) {

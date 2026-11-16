@@ -91,54 +91,24 @@
         android:layout_marginTop="16dp"
         android:layout_marginBottom="20dp">
 
-        <!-- Album Art Container (Rotating Vinyl Turntable Player) -->
-        <com.beatsync.app.ui.custom.LiquidGlassLayout
+        <!-- Live Neon Music Pulse Visualizer Container -->
+        <FrameLayout
             android:id="@+id/cardArtContainer"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_gravity="center">
 
-            <FrameLayout
+            <!-- Real-time Neon Equalizer Pulse Waveform Visualizer -->
+            <com.beatsync.app.ui.custom.MusicPulseVisualizerView
+                android:id="@+id/musicPulseVisualizer"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_gravity="center">
-
-                <!-- Subtle Ambient Glow behind disc -->
-                <View
-                    android:layout_width="260dp"
-                    android:layout_height="260dp"
-                    android:layout_gravity="center"
-                    android:background="@drawable/bg_ambient_lighting"
-                    android:alpha="0.45" />
-
-                <!-- The Rotating Vinyl Disc -->
-                <FrameLayout
-                    android:id="@+id/layoutVinylDisc"
-                    android:layout_width="260dp"
-                    android:layout_height="260dp"
-                    android:layout_gravity="center"
-                    android:background="@drawable/bg_vinyl_disc">
-
-                    <!-- Center Label Badge -->
-                    <FrameLayout
-                        android:layout_width="92dp"
-                        android:layout_height="92dp"
-                        android:layout_gravity="center"
-                        android:background="@drawable/bg_vinyl_center_label">
-
-                        <ImageView
-                            android:id="@+id/ivVinylCenter"
-                            android:layout_width="32dp"
-                            android:layout_height="32dp"
-                            android:layout_gravity="center"
-                            android:src="@drawable/ic_music_note"
-                            android:tint="#FFFFFF"
-                            android:contentDescription="Music Track" />
-                    </FrameLayout>
-                </FrameLayout>
-
-            </FrameLayout>
-        </com.beatsync.app.ui.custom.LiquidGlassLayout>
+                android:layout_gravity="center"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:paddingTop="24dp"
+                android:paddingBottom="24dp" />
+        </FrameLayout>
 
         <!-- Lyrics Container (Liquid Glass Layout with edge fade masks) -->
         <com.beatsync.app.ui.custom.LiquidGlassLayout

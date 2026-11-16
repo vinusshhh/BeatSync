@@ -25,6 +25,7 @@ public class AdminTrackAdapter extends RecyclerView.Adapter<AdminTrackAdapter.Tr
 
     public interface OnAdminTrackActionListener {
         void onPlayTrack(Track track, List<Track> list, int position);
+        void onEditTrack(Track track);
         void onDeleteTrack(Track track);
     }
 
@@ -53,6 +54,7 @@ public class AdminTrackAdapter extends RecyclerView.Adapter<AdminTrackAdapter.Tr
         Track track = tracks.get(position);
         AnimationHelper.animateRubberEntrance(holder.itemView, position);
         AnimationHelper.addRubberPressEffect(holder.btnPlay);
+        AnimationHelper.addRubberPressEffect(holder.btnEdit);
         AnimationHelper.addRubberPressEffect(holder.btnDelete);
 
         holder.tvTitle.setText(track.getTitle());
@@ -78,6 +80,12 @@ public class AdminTrackAdapter extends RecyclerView.Adapter<AdminTrackAdapter.Tr
             }
         });
 
+        holder.btnEdit.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onEditTrack(track);
+            }
+        });
+
         holder.btnDelete.setOnClickListener(v -> {
             if (listener != null) {
                 listener.onDeleteTrack(track);
@@ -92,7 +100,7 @@ public class AdminTrackAdapter extends RecyclerView.Adapter<AdminTrackAdapter.Tr
 
     static class TrackViewHolder extends RecyclerView.ViewHolder {
         TextView tvTitle, tvArtist, tvBadge, tvUploader;
-        ImageView ivCover, ivNote, btnPlay, btnDelete;
+        ImageView ivCover, ivNote, btnPlay, btnEdit, btnDelete;
 
         TrackViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -103,6 +111,7 @@ public class AdminTrackAdapter extends RecyclerView.Adapter<AdminTrackAdapter.Tr
             ivCover = itemView.findViewById(R.id.ivCover);
             ivNote = itemView.findViewById(R.id.ivDefaultNote);
             btnPlay = itemView.findViewById(R.id.btnPlayTrack);
+            btnEdit = itemView.findViewById(R.id.btnEditTrack);
             btnDelete = itemView.findViewById(R.id.btnDeleteTrack);
         }
     }

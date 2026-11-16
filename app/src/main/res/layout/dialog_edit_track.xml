@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_ambient_lighting"
+    android:padding="24dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="EDIT TRACK DETAILS"
+        android:textColor="@color/accent_cyan"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:letterSpacing="0.14" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Modify Track Metadata"
+        android:textColor="@color/text_primary"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:layout_marginTop="2dp"
+        android:layout_marginBottom="18dp" />
+
+    <!-- Title Field -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="TRACK TITLE"
+        android:textColor="@color/text_secondary"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:letterSpacing="0.08"
+        android:layout_marginBottom="6dp" />
+
+    <EditText
+        android:id="@+id/etEditTitle"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:background="@drawable/bg_edit_text"
+        android:textColor="@color/text_primary"
+        android:textColorHint="@color/text_tertiary"
+        android:hint="Track Title"
+        android:textSize="14sp"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
+        android:inputType="textCapWords" />
+
+    <!-- Artist Field -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="ARTIST NAME"
+        android:textColor="@color/text_secondary"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:letterSpacing="0.08"
+        android:layout_marginTop="14dp"
+        android:layout_marginBottom="6dp" />
+
+    <EditText
+        android:id="@+id/etEditArtist"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:background="@drawable/bg_edit_text"
+        android:textColor="@color/text_primary"
+        android:textColorHint="@color/text_tertiary"
+        android:hint="Artist Name"
+        android:textSize="14sp"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
+        android:inputType="textPersonName" />
+
+    <!-- Album Field -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="ALBUM / RELEASE"
+        android:textColor="@color/text_secondary"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:letterSpacing="0.08"
+        android:layout_marginTop="14dp"
+        android:layout_marginBottom="6dp" />
+
+    <EditText
+        android:id="@+id/etEditAlbum"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:background="@drawable/bg_edit_text"
+        android:textColor="@color/text_primary"
+        android:textColorHint="@color/text_tertiary"
+        android:hint="Single / Album"
+        android:textSize="14sp"
+        android:paddingStart="14dp"
+        android:paddingEnd="14dp"
+        android:inputType="textCapWords" />
+
+    <!-- Public / Private Visibility -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="24dp">
+
+        <TextView
+            android:id="@+id/tvEditVisibility"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Public Release (Visible to all)"
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp" />
+
+        <androidx.appcompat.widget.SwitchCompat
+            android:id="@+id/switchEditPublic"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="true" />
+    </LinearLayout>
+
+    <!-- Buttons -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="end">
+
+        <TextView
+            android:id="@+id/btnCancelEdit"
+            android:layout_width="wrap_content"
+            android:layout_height="42dp"
+            android:gravity="center"
+            android:text="Cancel"
+            android:textColor="@color/text_secondary"
+            android:textSize="13sp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:clickable="true"
+            android:focusable="true" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/btnSaveEdit"
+            android:layout_width="wrap_content"
+            android:layout_height="42dp"
+            android:text="Save Changes"
+            android:textColor="@color/text_inverse"
+            android:textSize="13sp"
+            android:textStyle="bold"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:background="@drawable/bg_button_primary"
+            android:layout_marginStart="10dp" />
+    </LinearLayout>
+
+</LinearLayout>

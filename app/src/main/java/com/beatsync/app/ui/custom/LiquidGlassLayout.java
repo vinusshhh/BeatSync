@@ -44,19 +44,6 @@ public class LiquidGlassLayout extends FrameLayout {
     private final RectF strokeRect = new RectF();
     private final Path sheenPath = new Path();
 
-    // AGSL edge refraction shader for Android 13+ (API 33+)
-    private static final String AGSL_LIQUID_REFRACTION =
-            "uniform shader image;\n" +
-            "uniform float2 resolution;\n" +
-            "half4 main(float2 fragCoord) {\n" +
-            "    float2 uv = fragCoord / resolution;\n" +
-            "    float distFromCenter = length(uv - 0.5);\n" +
-            "    float rim = smoothstep(0.38, 0.5, distFromCenter);\n" +
-            "    half4 color = image.eval(fragCoord);\n" +
-            "    half4 glassRim = half4(1.0, 1.0, 1.0, 0.28) * rim;\n" +
-            "    return color + glassRim;\n" +
-            "}";
-
     public LiquidGlassLayout(@NonNull Context context) {
         this(context, null);
     }
@@ -75,24 +62,6 @@ public class LiquidGlassLayout extends FrameLayout {
 
         float density = getResources().getDisplayMetrics().density;
         cornerRadius = 26f * density;
-
-        // Apply hardware RenderEffect blur on Android 12+ (API 31+)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            try {
-                RenderEffect blurEffect = RenderEffect.createBlurEffect(26f * density, 26f * density, Shader.TileMode.CLAMP);
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    try {
-                        RuntimeShader shader = new RuntimeShader(AGSL_LIQUID_REFRACTION);
-                        RenderEffect shaderEffect = RenderEffect.createRuntimeShaderEffect(shader, "image");
-                        setRenderEffect(RenderEffect.createChainEffect(shaderEffect, blurEffect));
-                    } catch (Throwable t) {
-                        setRenderEffect(blurEffect);
-                    }
-                } else {
-                    setRenderEffect(blurEffect);
-                }
-            } catch (Throwable ignored) {}
-        }
 
         // Outline Provider for smooth squircle clipping
         setOutlineProvider(new ViewOutlineProvider() {
