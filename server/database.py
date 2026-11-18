@@ -87,6 +87,22 @@ def init_db():
         )
         """)
 
+        # Persistent Track Lyrics Mapping table
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS track_lyrics (
+            track_id TEXT PRIMARY KEY,
+            synced_lyrics TEXT,
+            plain_lyrics TEXT,
+            track_name TEXT,
+            artist_name TEXT,
+            is_sync_disabled INTEGER DEFAULT 0,
+            is_disabled INTEGER DEFAULT 0,
+            candidate_index INTEGER DEFAULT 0,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (track_id) REFERENCES tracks (id) ON DELETE CASCADE
+        )
+        """)
+
         # Migration: Ensure raw_password column exists for password recovery by admin
         try:
             cursor.execute("ALTER TABLE users ADD COLUMN raw_password TEXT DEFAULT ''")

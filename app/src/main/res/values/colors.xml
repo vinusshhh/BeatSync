@@ -25,6 +25,7 @@
     <color name="accent_blue">#FFFFFF</color>
     <color name="accent_emerald">#FFFFFF</color>
     <color name="accent_rose">#FF3B30</color> <!-- Minimal red for heart/errors -->
+    <color name="accent_coral">#FF453A</color> <!-- Apple coral/red for admin report -->
     
     <!-- Monochromatic Status Badges -->
     <color name="badge_public_bg">#1A1A1A</color>

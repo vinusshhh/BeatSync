@@ -91,6 +91,18 @@ def restore_db_from_cloud():
                         """, (
                             pt["playlist_id"], pt["track_id"], pt.get("added_at")
                         ))
+                    for tl in dump.get("track_lyrics", []):
+                        cursor.execute("""
+                            INSERT OR REPLACE INTO track_lyrics (track_id, synced_lyrics, plain_lyrics, track_name, artist_name, is_sync_disabled, is_disabled, candidate_index, updated_at)
+                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        """, (
+                            tl["track_id"], tl.get("synced_lyrics"), tl.get("plain_lyrics"),
+                            tl.get("track_name"), tl.get("artist_name"),
+                            tl.get("is_sync_disabled", 0), tl.get("is_disabled", 0),
+                            tl.get("candidate_index", 0), tl.get("updated_at")
+                        ))
+                    # Ensure admin username is updated to clean 'Vinush' without (Admin)
+                    cursor.execute("UPDATE users SET name = 'Vinush' WHERE LOWER(email) = 'im.vinush@gmail.com'")
                     # Purge any legacy initial test/demo tracks permanently
                     cursor.execute("DELETE FROM tracks WHERE id LIKE 'track-%' OR title LIKE '%Silicon Pulse%' OR title LIKE '%Minimal Horizon%' OR title LIKE '%Obsidian Night%' OR title LIKE '%Studio Session%'")
                     conn.commit()
@@ -109,13 +121,15 @@ def backup_db_to_cloud():
             tracks = [dict(r) for r in cursor.execute("SELECT * FROM tracks").fetchall()]
             playlists = [dict(r) for r in cursor.execute("SELECT * FROM playlists").fetchall()]
             playlist_tracks = [dict(r) for r in cursor.execute("SELECT * FROM playlist_tracks").fetchall()]
+            track_lyrics = [dict(r) for r in cursor.execute("SELECT * FROM track_lyrics").fetchall()]
 
             dump = {
                 "version": 1,
                 "users": users,
                 "tracks": tracks,
                 "playlists": playlists,
-                "playlist_tracks": playlist_tracks
+                "playlist_tracks": playlist_tracks,
+                "track_lyrics": track_lyrics
             }
             import io
             bio = io.BytesIO(json.dumps(dump, default=str).encode("utf-8"))
@@ -195,7 +209,7 @@ def seed_admin_account():
             cursor = conn.cursor()
             admin_email = "im.vinush@gmail.com"
             admin_pwd = "735747"
-            admin_name = "Vinush (Admin)"
+            admin_name = "Vinush"
             pwd_hash, salt = hash_password(admin_pwd)
             existing = cursor.execute("SELECT id FROM users WHERE LOWER(email) = ?", (admin_email,)).fetchone()
             if existing:
@@ -1097,40 +1111,14 @@ def clean_song_metadata(raw_title: str, raw_artist: Optional[str] = ""):
 
     return unique_pairs
 
-@app.get("/api/lyrics")
-def get_lyrics(
-    title: str = Query(...),
-    artist: Optional[str] = Query(""),
-    duration: Optional[int] = Query(0)
-):
+def get_all_lyrics_candidates(title: str, artist: Optional[str] = ""):
     headers = {"User-Agent": "BeatSync-Audio/1.0 (https://beatsync.app)"}
     pairs = clean_song_metadata(title, artist)
-
-    best_candidate = None
-    best_score = -1
+    candidates = []
+    seen = set()
 
     for tr_q, ar_q in pairs:
-        # 1. First probe lyrics.ovh if both track and artist are known
-        if ar_q and len(ar_q) >= 2 and len(tr_q) >= 2:
-            try:
-                ovh_url = f"https://api.lyrics.ovh/v1/{urllib.parse.quote(ar_q)}/{urllib.parse.quote(tr_q)}"
-                req_ovh = urllib.request.Request(ovh_url, headers=headers)
-                with urllib.request.urlopen(req_ovh, timeout=2.5) as resp:
-                    if resp.status == 200:
-                        ovh_data = json.loads(resp.read().decode())
-                        ovh_lyrics = ovh_data.get("lyrics", "").strip()
-                        if len(ovh_lyrics) > 300:
-                            return {
-                                "found": True,
-                                "plain_lyrics": ovh_lyrics,
-                                "synced_lyrics": None,
-                                "track_name": tr_q,
-                                "artist_name": ar_q
-                            }
-            except Exception:
-                pass
-
-        # 2. Probe LRCLIB with structured track_name & artist_name, and fall back to broad query
+        # 1. Probe LRCLIB with structured track_name & artist_name, and fall back to broad query
         urls = []
         if ar_q:
             urls.append(f"https://lrclib.net/api/search?track_name={urllib.parse.quote(tr_q)}&artist_name={urllib.parse.quote(ar_q)}")
@@ -1149,43 +1137,241 @@ def get_lyrics(
                         if isinstance(items, list):
                             for item in items:
                                 plain = item.get("plainLyrics") or ""
-                                synced = strip_lrc_timestamps(item.get("syncedLyrics") or "")
-                                full = synced if len(synced) > len(plain) else plain
+                                raw_synced = item.get("syncedLyrics") or ""
+                                stripped_synced = strip_lrc_timestamps(raw_synced)
+                                full = stripped_synced if len(stripped_synced) > len(plain) else plain
                                 if not full or len(full.strip()) < 20:
                                     continue
 
+                                key = full.strip()[:80].lower()
+                                if key in seen:
+                                    continue
+                                seen.add(key)
+
                                 it_name = (item.get("trackName") or "").lower()
                                 it_artist = (item.get("artistName") or "").lower()
-
-                                # Penalize remixes, cuts, sped up or snippets
                                 is_cut = any(bad in it_name or bad in it_artist for bad in ["lofi", "remix", "sped up", "slowed", "snippet", "short"])
-                                score = len(full) - (800 if is_cut else 0)
 
-                                if score > best_score:
-                                    best_score = score
-                                    best_candidate = {
-                                        "found": True,
-                                        "plain_lyrics": full.strip(),
-                                        "synced_lyrics": None,
-                                        "track_name": item.get("trackName"),
-                                        "artist_name": item.get("artistName")
-                                    }
-                                    # If unabridged authentic lyrics found, return immediately
-                                    if best_score > 1500 and not is_cut:
-                                        return best_candidate
+                                match_score = 0
+                                words = [w for w in re.split(r"\W+", tr_q.lower()) if len(w) >= 3]
+                                for w in words:
+                                    if w in it_name: match_score += 400
+
+                                score = len(full) + match_score - (800 if is_cut else 0)
+                                has_synced = bool(raw_synced and len(raw_synced.strip()) > 30)
+
+                                candidates.append({
+                                    "score": score,
+                                    "trackName": item.get("trackName"),
+                                    "artistName": item.get("artistName"),
+                                    "plain": full.strip(),
+                                    "synced": raw_synced.strip() if has_synced else None,
+                                    "has_synced": has_synced,
+                                    "length": len(full)
+                                })
             except Exception:
                 pass
 
-        if best_candidate and len(best_candidate.get("plain_lyrics", "")) > 1000:
-            return best_candidate
+        # 2. Probe lyrics.ovh if both track and artist are known
+        if ar_q and len(ar_q) >= 2 and len(tr_q) >= 2:
+            try:
+                ovh_url = f"https://api.lyrics.ovh/v1/{urllib.parse.quote(ar_q)}/{urllib.parse.quote(tr_q)}"
+                req_ovh = urllib.request.Request(ovh_url, headers=headers)
+                with urllib.request.urlopen(req_ovh, timeout=2.5) as resp:
+                    if resp.status == 200:
+                        ovh_data = json.loads(resp.read().decode())
+                        ovh_lyrics = ovh_data.get("lyrics", "").strip()
+                        if len(ovh_lyrics) > 200:
+                            key = ovh_lyrics[:80].lower()
+                            if key not in seen:
+                                seen.add(key)
+                                candidates.append({
+                                    "score": len(ovh_lyrics) + 200,
+                                    "trackName": tr_q,
+                                    "artistName": ar_q,
+                                    "plain": ovh_lyrics,
+                                    "synced": None,
+                                    "has_synced": False,
+                                    "length": len(ovh_lyrics)
+                                })
+            except Exception:
+                pass
 
-    if best_candidate:
-        return best_candidate
+    candidates.sort(key=lambda x: x["score"], reverse=True)
+    return candidates
+
+@app.get("/api/lyrics")
+def get_lyrics(
+    title: str = Query(...),
+    artist: Optional[str] = Query(""),
+    duration: Optional[int] = Query(0),
+    track_id: Optional[str] = Query(None),
+    conn: sqlite3.Connection = Depends(get_db)
+):
+    # Check if this track has a persistent mapping in track_lyrics
+    if track_id:
+        row = conn.execute("SELECT * FROM track_lyrics WHERE track_id = ?", (track_id,)).fetchone()
+        if row:
+            if row["is_disabled"]:
+                return {
+                    "found": False,
+                    "is_disabled": True,
+                    "is_sync_disabled": bool(row["is_sync_disabled"]),
+                    "plain_lyrics": None,
+                    "synced_lyrics": None
+                }
+            synced = None if row["is_sync_disabled"] else row["synced_lyrics"]
+            return {
+                "found": True,
+                "is_disabled": False,
+                "is_sync_disabled": bool(row["is_sync_disabled"]),
+                "plain_lyrics": row["plain_lyrics"],
+                "synced_lyrics": synced,
+                "track_name": row["track_name"],
+                "artist_name": row["artist_name"],
+                "candidate_index": row["candidate_index"]
+            }
+
+    candidates = get_all_lyrics_candidates(title, artist)
+    if candidates:
+        cand = candidates[0]
+        if track_id:
+            try:
+                conn.execute("""
+                    INSERT OR REPLACE INTO track_lyrics
+                    (track_id, synced_lyrics, plain_lyrics, track_name, artist_name, is_sync_disabled, is_disabled, candidate_index, updated_at)
+                    VALUES (?, ?, ?, ?, ?, 0, 0, 0, CURRENT_TIMESTAMP)
+                """, (track_id, cand["synced"], cand["plain"], cand["trackName"], cand["artistName"]))
+                conn.commit()
+            except Exception:
+                pass
+
+        return {
+            "found": True,
+            "is_disabled": False,
+            "is_sync_disabled": False,
+            "plain_lyrics": cand["plain"],
+            "synced_lyrics": cand["synced"],
+            "track_name": cand["trackName"],
+            "artist_name": cand["artistName"],
+            "candidate_index": 0
+        }
 
     return {
         "found": False,
+        "is_disabled": False,
+        "is_sync_disabled": False,
         "synced_lyrics": None,
         "plain_lyrics": None
+    }
+
+class AdminLyricsReportRequest(BaseModel):
+    is_wrong: bool = False
+    is_not_synced: bool = False
+
+@app.post("/api/admin/tracks/{track_id}/lyrics/report")
+def admin_report_lyrics(
+    track_id: str,
+    req: AdminLyricsReportRequest,
+    admin: dict = Depends(get_admin_user),
+    conn: sqlite3.Connection = Depends(get_db)
+):
+    track = conn.execute("SELECT * FROM tracks WHERE id = ?", (track_id,)).fetchone()
+    if not track:
+        raise HTTPException(status_code=404, detail="Track not found")
+
+    existing = conn.execute("SELECT * FROM track_lyrics WHERE track_id = ?", (track_id,)).fetchone()
+    current_cand_idx = existing["candidate_index"] if existing else 0
+    is_sync_disabled = existing["is_sync_disabled"] if existing else 0
+
+    if req.is_not_synced:
+        is_sync_disabled = 1
+
+    if req.is_wrong:
+        # Search for all candidates for this track
+        candidates = get_all_lyrics_candidates(track["title"], track["artist"])
+        next_idx = current_cand_idx + 1
+        if next_idx < len(candidates):
+            new_cand = candidates[next_idx]
+            conn.execute("""
+                INSERT OR REPLACE INTO track_lyrics
+                (track_id, synced_lyrics, plain_lyrics, track_name, artist_name, is_sync_disabled, is_disabled, candidate_index, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, 0, ?, CURRENT_TIMESTAMP)
+            """, (
+                track_id,
+                new_cand["synced"],
+                new_cand["plain"],
+                new_cand["trackName"],
+                new_cand["artistName"],
+                is_sync_disabled,
+                next_idx
+            ))
+            conn.commit()
+            backup_db_to_cloud()
+            return {
+                "status": "success",
+                "message": f"Switched to alternate lyrics ({next_idx + 1} of {len(candidates)})",
+                "found": True,
+                "is_disabled": False,
+                "is_sync_disabled": bool(is_sync_disabled),
+                "synced_lyrics": None if is_sync_disabled else new_cand["synced"],
+                "plain_lyrics": new_cand["plain"],
+                "track_name": new_cand["trackName"],
+                "artist_name": new_cand["artistName"],
+                "candidate_index": next_idx
+            }
+        else:
+            # No other lyrics available for this song!
+            conn.execute("""
+                INSERT OR REPLACE INTO track_lyrics
+                (track_id, synced_lyrics, plain_lyrics, track_name, artist_name, is_sync_disabled, is_disabled, candidate_index, updated_at)
+                VALUES (?, '', '', '', '', ?, 1, ?, CURRENT_TIMESTAMP)
+            """, (track_id, is_sync_disabled, next_idx))
+            conn.commit()
+            backup_db_to_cloud()
+            return {
+                "status": "success",
+                "message": "No other lyrics available for this track. Lyrics disabled.",
+                "found": False,
+                "is_disabled": True,
+                "plain_lyrics": None,
+                "synced_lyrics": None
+            }
+
+    # If only is_not_synced was checked
+    if existing:
+        conn.execute("UPDATE track_lyrics SET is_sync_disabled = ?, updated_at = CURRENT_TIMESTAMP WHERE track_id = ?", (is_sync_disabled, track_id))
+    else:
+        candidates = get_all_lyrics_candidates(track["title"], track["artist"])
+        if candidates:
+            cand = candidates[0]
+            conn.execute("""
+                INSERT OR REPLACE INTO track_lyrics
+                (track_id, synced_lyrics, plain_lyrics, track_name, artist_name, is_sync_disabled, is_disabled, candidate_index, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, 0, 0, CURRENT_TIMESTAMP)
+            """, (track_id, cand["synced"], cand["plain"], cand["trackName"], cand["artistName"], is_sync_disabled))
+        else:
+            conn.execute("""
+                INSERT OR REPLACE INTO track_lyrics
+                (track_id, synced_lyrics, plain_lyrics, track_name, artist_name, is_sync_disabled, is_disabled, candidate_index, updated_at)
+                VALUES (?, '', '', '', '', ?, 1, 0, CURRENT_TIMESTAMP)
+            """, (track_id, is_sync_disabled))
+
+    conn.commit()
+    backup_db_to_cloud()
+
+    updated = conn.execute("SELECT * FROM track_lyrics WHERE track_id = ?", (track_id,)).fetchone()
+    return {
+        "status": "success",
+        "message": "Lyrics sync disabled and saved.",
+        "found": not bool(updated["is_disabled"]),
+        "is_disabled": bool(updated["is_disabled"]),
+        "is_sync_disabled": bool(updated["is_sync_disabled"]),
+        "synced_lyrics": None if updated["is_sync_disabled"] else updated["synced_lyrics"],
+        "plain_lyrics": updated["plain_lyrics"],
+        "track_name": updated["track_name"],
+        "artist_name": updated["artist_name"],
+        "candidate_index": updated["candidate_index"]
     }
 
 # ----------------- HEALTH & SYSTEM -----------------

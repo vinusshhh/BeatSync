@@ -3,6 +3,7 @@ package com.beatsync.app.ui;
 import android.animation.ObjectAnimator;
 import android.app.AlertDialog;
 import android.os.Bundle;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.SeekBar;
@@ -19,12 +20,17 @@ import com.beatsync.app.databinding.ActivityNowPlayingBinding;
 import com.beatsync.app.models.LyricsResponse;
 import com.beatsync.app.models.Playlist;
 import com.beatsync.app.models.Track;
+import com.beatsync.app.models.User;
 import com.beatsync.app.player.MusicPlayerManager;
 import com.beatsync.app.ui.adapters.PlaylistAdapter;
+import com.beatsync.app.ui.adapters.SyncedLyricsAdapter;
 import com.beatsync.app.ui.utils.AnimationHelper;
 import com.bumptech.glide.Glide;
 import java.util.List;
 import java.util.Locale;
+import android.widget.CheckBox;
+import android.widget.ProgressBar;
+import androidx.recyclerview.widget.LinearLayoutManager;
 
 public class NowPlayingActivity extends AppCompatActivity implements MusicPlayerManager.PlaybackListener {
 
@@ -33,6 +39,9 @@ public class NowPlayingActivity extends AppCompatActivity implements MusicPlayer
     private boolean isUserSeeking = false;
     private boolean isLyricsMode = false;
     private String currentLyricsTrackId = null;
+    private SyncedLyricsAdapter syncedLyricsAdapter;
+    private LyricsResponse currentLyricsResponse = null;
+    private boolean isLiveSynced = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -161,6 +170,23 @@ public class NowPlayingActivity extends AppCompatActivity implements MusicPlayer
     private void setupLyricsView() {
         binding.tvLyricsContent.setText("");
         binding.tvLyricsEmpty.setVisibility(View.GONE);
+
+        LinearLayoutManager lm = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
+        binding.rvSyncedLyrics.setLayoutManager(lm);
+        syncedLyricsAdapter = new SyncedLyricsAdapter((line, position) -> {
+            if (line != null) {
+                playerManager.seekTo((int) line.getTimeMs());
+            }
+        });
+        binding.rvSyncedLyrics.setAdapter(syncedLyricsAdapter);
+
+        User currentUser = com.beatsync.app.auth.AuthManager.getInstance(this).getUser();
+        boolean isAdmin = (currentUser != null && currentUser.isAdmin());
+        binding.btnAdminLyricsReport.setVisibility(isAdmin ? View.VISIBLE : View.GONE);
+        binding.btnAdminLyricsReport.setOnClickListener(v -> {
+            AnimationHelper.rubberPop(binding.btnAdminLyricsReport);
+            showAdminLyricsReportDialog();
+        });
     }
 
     private void toggleLyricsView() {
@@ -209,37 +235,131 @@ public class NowPlayingActivity extends AppCompatActivity implements MusicPlayer
         binding.pbLyricsLoading.setVisibility(View.VISIBLE);
         binding.tvLyricsEmpty.setVisibility(View.GONE);
         binding.scrollLyrics.setVisibility(View.GONE);
+        binding.rvSyncedLyrics.setVisibility(View.GONE);
 
-        ApiClient.getInstance(this).getLyrics(track.getTitle(), track.getArtist(), track.getDurationSeconds(), new ApiClient.ApiCallback<LyricsResponse>() {
+        ApiClient.getInstance(this).getLyrics(track.getId(), track.getTitle(), track.getArtist(), track.getDurationSeconds(), new ApiClient.ApiCallback<LyricsResponse>() {
             @Override
             public void onSuccess(LyricsResponse response) {
                 binding.pbLyricsLoading.setVisibility(View.GONE);
-                if (response != null && response.isFound()) {
-                    String cleanLyrics = response.getCleanLyricalText();
-                    if (!cleanLyrics.isEmpty()) {
-                        binding.tvLyricsContent.setText(cleanLyrics);
-                        binding.tvLyricsEmpty.setVisibility(View.GONE);
-                        binding.scrollLyrics.setVisibility(View.VISIBLE);
-                        // Reset scroll position to top for new song
-                        binding.scrollLyrics.scrollTo(0, 0);
-                        return;
-                    }
-                }
-                binding.tvLyricsContent.setText("");
-                binding.tvLyricsEmpty.setText("No lyrics available for \"" + track.getTitle() + "\".");
-                binding.tvLyricsEmpty.setVisibility(View.VISIBLE);
-                binding.scrollLyrics.setVisibility(View.GONE);
+                currentLyricsResponse = response;
+                applyLyricsResponse(response, track);
             }
 
             @Override
             public void onError(String error) {
                 binding.pbLyricsLoading.setVisibility(View.GONE);
+                currentLyricsResponse = null;
+                isLiveSynced = false;
+                binding.tvLyricsHeader.setText("LYRICS");
                 binding.tvLyricsContent.setText("");
                 binding.tvLyricsEmpty.setText("Lyrics search unavailable");
                 binding.tvLyricsEmpty.setVisibility(View.VISIBLE);
                 binding.scrollLyrics.setVisibility(View.GONE);
+                binding.rvSyncedLyrics.setVisibility(View.GONE);
             }
         });
+    }
+
+    private void applyLyricsResponse(LyricsResponse response, Track track) {
+        if (response != null && response.isFound() && !response.isDisabled()) {
+            if (response.hasSyncedLyrics()) {
+                isLiveSynced = true;
+                binding.tvLyricsHeader.setText("LIVE SYNCED LYRICS");
+                syncedLyricsAdapter.setLines(response.getParsedLines());
+                binding.rvSyncedLyrics.setVisibility(View.VISIBLE);
+                binding.scrollLyrics.setVisibility(View.GONE);
+                binding.tvLyricsEmpty.setVisibility(View.GONE);
+                int currentPos = playerManager.getCurrentPosition();
+                syncedLyricsAdapter.setActiveTime(currentPos);
+                return;
+            } else {
+                isLiveSynced = false;
+                binding.tvLyricsHeader.setText(response.isSyncDisabled() ? "LYRICS (UNSYNCED)" : "LYRICS");
+                String cleanLyrics = response.getCleanLyricalText();
+                if (!cleanLyrics.isEmpty()) {
+                    binding.tvLyricsContent.setText(cleanLyrics);
+                    binding.tvLyricsEmpty.setVisibility(View.GONE);
+                    binding.scrollLyrics.setVisibility(View.VISIBLE);
+                    binding.rvSyncedLyrics.setVisibility(View.GONE);
+                    binding.scrollLyrics.scrollTo(0, 0);
+                    return;
+                }
+            }
+        }
+
+        isLiveSynced = false;
+        binding.tvLyricsHeader.setText("LYRICS");
+        binding.tvLyricsContent.setText("");
+        binding.tvLyricsEmpty.setText("No lyrics available for \"" + track.getTitle() + "\".");
+        binding.tvLyricsEmpty.setVisibility(View.VISIBLE);
+        binding.scrollLyrics.setVisibility(View.GONE);
+        binding.rvSyncedLyrics.setVisibility(View.GONE);
+    }
+
+    private void showAdminLyricsReportDialog() {
+        Track track = playerManager.getCurrentTrack();
+        if (track == null) return;
+
+        View dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_admin_lyrics_report, null);
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setView(dialogView)
+                .create();
+
+        if (dialog.getWindow() != null) {
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+        }
+
+        TextView tvTitle = dialogView.findViewById(R.id.tvReportSongTitle);
+        CheckBox cbWrong = dialogView.findViewById(R.id.cbWrongLyrics);
+        CheckBox cbNotSynced = dialogView.findViewById(R.id.cbNotSynced);
+        View btnCancel = dialogView.findViewById(R.id.btnCancelReport);
+        View btnApply = dialogView.findViewById(R.id.btnApplyReport);
+        ProgressBar pbLoading = dialogView.findViewById(R.id.pbReportLoading);
+
+        tvTitle.setText("Adjusting lyrics for \"" + track.getTitle() + "\"");
+
+        if (currentLyricsResponse != null && currentLyricsResponse.isSyncDisabled()) {
+            cbNotSynced.setChecked(true);
+        }
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+
+        btnApply.setOnClickListener(v -> {
+            boolean isWrong = cbWrong.isChecked();
+            boolean isNotSynced = cbNotSynced.isChecked();
+
+            if (!isWrong && !isNotSynced) {
+                Toast.makeText(this, "Please check at least one option to report.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            pbLoading.setVisibility(View.VISIBLE);
+            btnApply.setEnabled(false);
+            btnCancel.setEnabled(false);
+
+            ApiClient.getInstance(this).reportLyrics(track.getId(), isWrong, isNotSynced, new ApiClient.ApiCallback<LyricsResponse>() {
+                @Override
+                public void onSuccess(LyricsResponse response) {
+                    dialog.dismiss();
+                    currentLyricsResponse = response;
+                    applyLyricsResponse(response, track);
+                    String msg = isWrong ?
+                            (response != null && response.isFound() ? "Updated to alternate lyrics for this song." : "No other lyrics available. Lyrics disabled.") :
+                            "Lyrics sync disabled for this song.";
+                    Toast.makeText(NowPlayingActivity.this, msg, Toast.LENGTH_LONG).show();
+                }
+
+                @Override
+                public void onError(String error) {
+                    pbLoading.setVisibility(View.GONE);
+                    btnApply.setEnabled(true);
+                    btnCancel.setEnabled(true);
+                    Toast.makeText(NowPlayingActivity.this, "Failed to update lyrics: " + error, Toast.LENGTH_SHORT).show();
+                }
+            });
+        });
+
+        dialog.show();
     }
 
     @Override
@@ -383,6 +503,17 @@ public class NowPlayingActivity extends AppCompatActivity implements MusicPlayer
             if (totalMs > 0) {
                 int progress = (int) (((long) currentMs * 1000) / totalMs);
                 binding.seekBar.setProgress(progress);
+            }
+        }
+
+        if (isLiveSynced && syncedLyricsAdapter != null) {
+            int newActive = syncedLyricsAdapter.setActiveTime(currentMs);
+            if (newActive >= 0) {
+                LinearLayoutManager lm = (LinearLayoutManager) binding.rvSyncedLyrics.getLayoutManager();
+                if (lm != null) {
+                    int offset = binding.rvSyncedLyrics.getHeight() / 3;
+                    lm.scrollToPositionWithOffset(newActive, Math.max(0, offset));
+                }
             }
         }
     }

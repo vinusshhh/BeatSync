@@ -26,6 +26,15 @@ public class LyricsResponse implements Serializable {
     @SerializedName("artist_name")
     private String artistName;
 
+    @SerializedName("is_disabled")
+    private boolean isDisabled;
+
+    @SerializedName("is_sync_disabled")
+    private boolean isSyncDisabled;
+
+    @SerializedName("candidate_index")
+    private int candidateIndex;
+
     public static class LyricLine implements Serializable {
         private final long timeMs;
         private final String text;
@@ -44,6 +53,13 @@ public class LyricsResponse implements Serializable {
     public String getPlainLyrics() { return plainLyrics; }
     public String getTrackName() { return trackName; }
     public String getArtistName() { return artistName; }
+    public boolean isDisabled() { return isDisabled; }
+    public boolean isSyncDisabled() { return isSyncDisabled; }
+    public int getCandidateIndex() { return candidateIndex; }
+
+    public boolean hasSyncedLyrics() {
+        return !isSyncDisabled && syncedLyrics != null && !syncedLyrics.trim().isEmpty() && !getParsedLines().isEmpty();
+    }
 
     public String getCleanLyricalText() {
         if (plainLyrics != null && !plainLyrics.trim().isEmpty()) {

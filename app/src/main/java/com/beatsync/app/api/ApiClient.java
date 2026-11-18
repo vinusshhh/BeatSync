@@ -359,8 +359,15 @@ public class ApiClient {
     // ---------------- LYRICS ----------------
 
     public void getLyrics(String title, String artist, int duration, ApiCallback<com.beatsync.app.models.LyricsResponse> callback) {
+        getLyrics(null, title, artist, duration, callback);
+    }
+
+    public void getLyrics(String trackId, String title, String artist, int duration, ApiCallback<com.beatsync.app.models.LyricsResponse> callback) {
         HttpUrl.Builder urlBuilder = HttpUrl.parse(getBaseUrl() + "/api/lyrics").newBuilder();
         urlBuilder.addQueryParameter("title", title != null ? title : "");
+        if (trackId != null && !trackId.isEmpty()) {
+            urlBuilder.addQueryParameter("track_id", trackId);
+        }
         if (artist != null && !artist.isEmpty()) {
             urlBuilder.addQueryParameter("artist", artist);
         }
@@ -368,12 +375,25 @@ public class ApiClient {
             urlBuilder.addQueryParameter("duration", String.valueOf(duration));
         }
 
-        Request request = new Request.Builder()
-                .url(urlBuilder.build())
-                .get()
-                .build();
-
+        Request request = newAuthenticatedRequest(urlBuilder.build().toString()).get().build();
         executeCall(request, com.beatsync.app.models.LyricsResponse.class, callback);
+    }
+
+    public void reportLyrics(String trackId, boolean isWrong, boolean isNotSynced, ApiCallback<com.beatsync.app.models.LyricsResponse> callback) {
+        new Thread(() -> {
+            try {
+                String json = "{\"is_wrong\":" + isWrong + ",\"is_not_synced\":" + isNotSynced + "}";
+                RequestBody body = RequestBody.create(json, MediaType.parse("application/json; charset=utf-8"));
+                Request request = newAuthenticatedRequest("/api/admin/tracks/" + trackId + "/lyrics/report")
+                        .post(body)
+                        .build();
+                executeCall(request, com.beatsync.app.models.LyricsResponse.class, callback);
+            } catch (Exception e) {
+                if (callback != null) {
+                    dispatchError(callback, e.getMessage());
+                }
+            }
+        }).start();
     }
 
     // ---------------- TRACK DELETION ----------------
