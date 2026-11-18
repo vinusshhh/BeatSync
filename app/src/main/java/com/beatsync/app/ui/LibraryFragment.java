@@ -452,7 +452,7 @@ public class LibraryFragment extends Fragment implements MusicPlayerManager.Play
     @Override
     public void onTrackChanged(Track track) {
         if (trackAdapter != null && track != null) {
-            trackAdapter.setPlayingTrackId(track.getId());
+            trackAdapter.setPlayingTrack(track);
         }
     }
 

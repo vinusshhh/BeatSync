@@ -2,6 +2,7 @@ package com.beatsync.app.ui;
 
 import android.database.Cursor;
 import android.graphics.Color;
+import android.media.MediaMetadataRetriever;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.OpenableColumns;
@@ -159,11 +160,14 @@ public class UploadFragment extends Fragment {
         binding.btnSubmitUpload.setEnabled(false);
         binding.tvStatus.setVisibility(View.GONE);
 
+        int durationSec = getAudioDurationSeconds(requireContext(), selectedAudioUri);
+
         ApiClient.getInstance(requireContext()).uploadTrack(
                 title,
                 artist,
                 "Single",
                 isPublic,
+                durationSec,
                 selectedAudioUri,
                 null,
                 new ApiClient.ApiCallback<Track>() {
@@ -262,11 +266,14 @@ public class UploadFragment extends Fragment {
             binding.tvBulkStatus.setText("Uploading " + nextIndex + " of " + uris.size() + ": \"" + finalTitle + "\"...");
         }
 
+        int durationSec = getAudioDurationSeconds(requireContext(), uri);
+
         ApiClient.getInstance(requireContext()).uploadTrack(
                 finalTitle,
                 finalArtist,
                 "Single",
                 isPublic,
+                durationSec,
                 uri,
                 null,
                 new ApiClient.ApiCallback<Track>() {
@@ -304,5 +311,24 @@ public class UploadFragment extends Fragment {
             }
         }
         return result;
+    }
+
+    public static int getAudioDurationSeconds(android.content.Context context, Uri uri) {
+        if (uri == null || context == null) return 0;
+        MediaMetadataRetriever mmr = new MediaMetadataRetriever();
+        try {
+            mmr.setDataSource(context, uri);
+            String dur = mmr.extractMetadata(MediaMetadataRetriever.METADATA_KEY_DURATION);
+            if (dur != null) {
+                long ms = Long.parseLong(dur);
+                return (int) (ms / 1000);
+            }
+        } catch (Exception ignored) {
+        } finally {
+            try {
+                mmr.release();
+            } catch (Exception ignored) {}
+        }
+        return 0;
     }
 }

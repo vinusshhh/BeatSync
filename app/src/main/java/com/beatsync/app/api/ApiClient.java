@@ -168,6 +168,11 @@ public class ApiClient {
 
     public void uploadTrack(String title, String artist, String album, boolean isPublic,
                             Uri audioUri, Uri coverUri, ApiCallback<Track> callback) {
+        uploadTrack(title, artist, album, isPublic, 0, audioUri, coverUri, callback);
+    }
+
+    public void uploadTrack(String title, String artist, String album, boolean isPublic, int durationSeconds,
+                            Uri audioUri, Uri coverUri, ApiCallback<Track> callback) {
         new Thread(() -> {
             try {
                 MultipartBody.Builder builder = new MultipartBody.Builder()
@@ -176,7 +181,7 @@ public class ApiClient {
                         .addFormDataPart("artist", artist)
                         .addFormDataPart("album", album != null ? album : "Single")
                         .addFormDataPart("is_public", String.valueOf(isPublic))
-                        .addFormDataPart("duration_seconds", "0");
+                        .addFormDataPart("duration_seconds", String.valueOf(Math.max(0, durationSeconds)));
 
                 // Read Audio file bytes
                 byte[] audioBytes = readUriBytes(audioUri);
@@ -204,6 +209,23 @@ public class ApiClient {
                 executeCall(request, Track.class, callback);
             } catch (Exception e) {
                 dispatchError(callback, "Upload failed: " + e.getMessage());
+            }
+        }).start();
+    }
+
+    public void updateTrackDuration(String trackId, int durationSeconds, ApiCallback<Track> callback) {
+        new Thread(() -> {
+            try {
+                String json = "{\"duration_seconds\":" + durationSeconds + "}";
+                RequestBody body = RequestBody.create(json, MediaType.parse("application/json; charset=utf-8"));
+                Request request = newAuthenticatedRequest("/api/tracks/" + trackId)
+                        .put(body)
+                        .build();
+                executeCall(request, Track.class, callback);
+            } catch (Exception e) {
+                if (callback != null) {
+                    dispatchError(callback, e.getMessage());
+                }
             }
         }).start();
     }

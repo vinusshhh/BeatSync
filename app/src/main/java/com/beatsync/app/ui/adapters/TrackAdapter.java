@@ -51,6 +51,20 @@ public class TrackAdapter extends RecyclerView.Adapter<TrackAdapter.TrackViewHol
         notifyDataSetChanged();
     }
 
+    public void setPlayingTrack(Track track) {
+        if (track == null) return;
+        this.playingTrackId = track.getId();
+        if (track.getDurationSeconds() > 0) {
+            for (Track t : trackList) {
+                if (t.getId() != null && t.getId().equals(track.getId())) {
+                    t.setDurationSeconds(track.getDurationSeconds());
+                    break;
+                }
+            }
+        }
+        notifyDataSetChanged();
+    }
+
     public List<Track> getTracks() {
         return trackList;
     }

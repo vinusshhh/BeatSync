@@ -300,7 +300,7 @@ public class HomeFragment extends Fragment implements MusicPlayerManager.Playbac
     @Override
     public void onTrackChanged(Track track) {
         if (trackAdapter != null && track != null) {
-            trackAdapter.setPlayingTrackId(track.getId());
+            trackAdapter.setPlayingTrack(track);
         }
     }
 

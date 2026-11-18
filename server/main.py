@@ -133,6 +133,50 @@ def backup_db_to_cloud():
 
 restore_db_from_cloud()
 
+def probe_audio_duration(filepath: str) -> int:
+    if not filepath or not os.path.exists(filepath):
+        return 0
+    try:
+        import mutagen
+        info = mutagen.File(filepath)
+        if info and info.info and getattr(info.info, "length", 0):
+            return int(round(info.info.length))
+    except Exception:
+        pass
+    try:
+        with open(filepath, "rb") as f:
+            data = f.read(128 * 1024)
+            tlen_idx = data.find(b"TLEN")
+            if tlen_idx != -1:
+                val = data[tlen_idx+10:tlen_idx+25]
+                m = re.search(rb"\d+", val)
+                if m:
+                    return int(int(m.group()) / 1000)
+    except Exception:
+        pass
+    return 0
+
+def auto_repair_zero_durations():
+    try:
+        with sqlite3.connect(DB_PATH) as conn:
+            conn.row_factory = sqlite3.Row
+            rows = conn.execute("SELECT id, duration_seconds FROM tracks WHERE duration_seconds IS NULL OR duration_seconds <= 0").fetchall()
+            updated = 0
+            for r in rows:
+                tid = r["id"]
+                matching = [f for f in os.listdir(UPLOAD_AUDIO_DIR) if f.startswith(tid)]
+                if matching:
+                    p = os.path.join(UPLOAD_AUDIO_DIR, matching[0])
+                    dur = probe_audio_duration(p)
+                    if dur > 0:
+                        conn.execute("UPDATE tracks SET duration_seconds = ? WHERE id = ?", (dur, tid))
+                        updated += 1
+            if updated > 0:
+                conn.commit()
+                print(f"[AutoRepair] Repaired duration for {updated} tracks.")
+    except Exception as e:
+        print(f"[AutoRepair] Error repairing durations: {e}")
+
 def purge_test_tracks():
     try:
         with sqlite3.connect(DB_PATH) as conn:
@@ -143,6 +187,7 @@ def purge_test_tracks():
         print(f"Error purging test tracks: {e}")
 
 purge_test_tracks()
+auto_repair_zero_durations()
 
 def seed_admin_account():
     try:
@@ -360,6 +405,11 @@ async def upload_track(
             )
             if "secure_url" in cloud_audio:
                 file_url = cloud_audio["secure_url"]
+            if "duration" in cloud_audio and (not duration_seconds or duration_seconds == 0):
+                try:
+                    duration_seconds = int(round(float(cloud_audio["duration"])))
+                except Exception:
+                    pass
                 
             if cover_filepath:
                 cloud_cover = cloudinary.uploader.upload(
@@ -372,6 +422,9 @@ async def upload_track(
                     cover_url = cloud_cover["secure_url"]
         except Exception as e:
             print(f"Cloudinary upload failed, using local file: {e}")
+
+    if not duration_seconds or duration_seconds == 0:
+        duration_seconds = probe_audio_duration(audio_filepath)
 
     conn.execute(
         """
@@ -863,6 +916,7 @@ class TrackUpdateRequest(BaseModel):
     artist: Optional[str] = None
     album: Optional[str] = None
     is_public: Optional[bool] = None
+    duration_seconds: Optional[int] = None
 
 @app.put("/api/tracks/{track_id}")
 @app.put("/api/admin/tracks/{track_id}")
@@ -886,14 +940,15 @@ def update_track(
     new_is_public = track["is_public"]
     if req.is_public is not None:
         new_is_public = 1 if req.is_public else 0
+    new_duration = req.duration_seconds if (req.duration_seconds is not None and req.duration_seconds > 0) else track["duration_seconds"]
 
     conn.execute(
         """
         UPDATE tracks
-        SET title = ?, artist = ?, album = ?, is_public = ?
+        SET title = ?, artist = ?, album = ?, is_public = ?, duration_seconds = ?
         WHERE id = ?
         """,
-        (new_title, new_artist, new_album, new_is_public, track_id)
+        (new_title, new_artist, new_album, new_is_public, new_duration, track_id)
     )
     conn.commit()
     backup_db_to_cloud()
@@ -967,54 +1022,6 @@ import urllib.parse
 import urllib.request
 import json
 
-def extract_clean_queries(title: str, artist: Optional[str] = None):
-    # Remove bracketed/parenthetical content
-    t = re.sub(r"[\(\[\{].*?[\)\]\}]", " ", title)
-    
-    # Strip common noise keywords in downloaded/YouTube music
-    junk_patterns = [
-        r"(?i)\b(audio\s+song|video\s+song|full\s+song|official\s+video|official\s+audio|official\s+music\s+video)\b",
-        r"(?i)\b(lyrical\s+video|lyric\s+video|lyrics|full\s+audio|original\s+soundtrack|soundtrack|ost)\b",
-        r"(?i)\b(1080p|720p|4k|hd|remix|reprise|unplugged|cover|acoustic|song|video|audio)\b"
-    ]
-    
-    # Split by common title-artist separators like " - ", " | ", " • ", " : ", " / "
-    parts = re.split(r"\s*[-|•:/]\s*", t)
-    candidates = []
-    
-    if len(parts) >= 2:
-        p1 = parts[0]
-        p2 = parts[1]
-        for pat in junk_patterns:
-            p1 = re.sub(pat, " ", p1)
-            p2 = re.sub(pat, " ", p2)
-        p1 = re.sub(r"\s+", " ", p1).strip()
-        p2 = re.sub(r"\s+", " ", p2).strip()
-        if len(p1) >= 2:
-            candidates.append(p1)
-        if len(p2) >= 2 and not any(k in p2.lower() for k in ["single", "album", "audio", "video"]):
-            candidates.append(p2)
-            
-    full_cleaned = t
-    for pat in junk_patterns:
-        full_cleaned = re.sub(pat, " ", full_cleaned)
-    full_cleaned = re.sub(r"\s+", " ", full_cleaned).strip()
-    if full_cleaned and len(full_cleaned) >= 2:
-        candidates.append(full_cleaned)
-        
-    if artist and artist.lower() not in ["unknown", "unknown artist", "single", "vinush (admin)", "anonymous"]:
-        if candidates:
-            candidates.append(f"{candidates[0]} {artist.strip()}")
-            
-    # Deduplicate while preserving order
-    seen = set()
-    result = []
-    for c in candidates:
-        if c.lower() not in seen:
-            seen.add(c.lower())
-            result.append(c)
-    return result
-
 def strip_lrc_timestamps(lrc_text: str) -> str:
     if not lrc_text:
         return ""
@@ -1025,6 +1032,71 @@ def strip_lrc_timestamps(lrc_text: str) -> str:
             lines.append(cleaned)
     return "\n".join(lines).strip()
 
+def clean_song_metadata(raw_title: str, raw_artist: Optional[str] = ""):
+    t = raw_title or ""
+    a = raw_artist or ""
+    
+    # Remove file extensions
+    t = re.sub(r"\.(mp3|wav|m4a|flac|aac|ogg|opus)$", "", t, flags=re.IGNORECASE)
+    
+    # Remove web scrapers / download site markers
+    t = re.sub(r"(?i)\b(y2meta\.app|y2mate|pagalworld|songs\.pk|djmaza|mr-jatt|spotifydown\.com|bestwap)\b", " ", t)
+    a = re.sub(r"(?i)\b(y2meta\.app|y2mate|pagalworld|songs\.pk|djmaza|mr-jatt|spotifydown\.com|bestwap)\b", " ", a)
+
+    # Remove bitrates, formats, quality tags, and parenthetical junk
+    junk_tags = [
+        r"(?i)[_\s]*\b(\d+kbps|320k|128k|256k|64k)\b",
+        r"(?i)[\(\[\{][^\)\]\}]*(?:official|audio|video|lyrics|hd|4k|remix|lofi|slowed|reverb|full|song|download|piano|cover)[^\)\]\}]*[\)\]\}]",
+        r"(?i)\b(audio\s+song|video\s+song|full\s+song|official\s+video|official\s+audio|official\s+music\s+video)\b",
+        r"(?i)\b(lyrical\s+video|lyric\s+video|lyrics|full\s+audio|original\s+soundtrack|soundtrack|ost)\b",
+        r"(?i)\b(1080p|720p|4k|hd|hq|extended|audio|video|epic piano cover|piano cover)\b"
+    ]
+    for tag in junk_tags:
+        t = re.sub(tag, " ", t)
+        a = re.sub(tag, " ", a)
+
+    # Replace underscores with spaces
+    t = t.replace("_", " ")
+    a = a.replace("_", " ")
+
+    t = re.sub(r"\s+", " ", t).strip()
+    a = re.sub(r"\s+", " ", a).strip()
+
+    # Clean artist if contains film cast or composite names
+    if "KK" in a or "Pritam" in a:
+        a = "Pritam"
+    elif "Darshan" in a:
+        a = "Darshan Raval"
+    elif a.lower() in ["unknown", "unknown artist", "single", "vinush (admin)", "beatsync artist"]:
+        a = ""
+
+    pairs_to_try = []
+    parts = [p.strip() for p in re.split(r"\s*[-|•:]\s*", t) if p.strip()]
+    if len(parts) >= 2:
+        p0, p1 = parts[0], parts[1]
+        pairs_to_try.append((p0, p1))
+        pairs_to_try.append((p1, p0))
+        pairs_to_try.append((p0, a))
+        pairs_to_try.append((p1, a))
+    
+    if t:
+        pairs_to_try.append((t, a))
+        pairs_to_try.append((t, ""))
+
+    if a and (not t or len(t) < 2):
+        pairs_to_try.append((a, ""))
+
+    # Deduplicate pairs while preserving order
+    seen = set()
+    unique_pairs = []
+    for track_q, artist_q in pairs_to_try:
+        key = (track_q.lower(), artist_q.lower())
+        if key not in seen and len(track_q) >= 2:
+            seen.add(key)
+            unique_pairs.append((track_q, artist_q))
+
+    return unique_pairs
+
 @app.get("/api/lyrics")
 def get_lyrics(
     title: str = Query(...),
@@ -1032,31 +1104,83 @@ def get_lyrics(
     duration: Optional[int] = Query(0)
 ):
     headers = {"User-Agent": "BeatSync-Audio/1.0 (https://beatsync.app)"}
-    queries = extract_clean_queries(title, artist)
-    
-    for q in queries:
-        try:
-            url = f"https://lrclib.net/api/search?q={urllib.parse.quote(q)}"
-            req = urllib.request.Request(url, headers=headers)
-            with urllib.request.urlopen(req, timeout=4) as response:
-                if response.status == 200:
-                    items = json.loads(response.read().decode())
-                    if isinstance(items, list) and len(items) > 0:
-                        for item in items:
-                            plain = item.get("plainLyrics")
-                            synced = item.get("syncedLyrics")
-                            if not plain and synced:
-                                plain = strip_lrc_timestamps(synced)
-                            if plain and len(plain.strip()) > 10:
-                                return {
-                                    "found": True,
-                                    "plain_lyrics": plain.strip(),
-                                    "synced_lyrics": None,
-                                    "track_name": item.get("trackName"),
-                                    "artist_name": item.get("artistName")
-                                }
-        except Exception:
-            pass
+    pairs = clean_song_metadata(title, artist)
+
+    best_candidate = None
+    best_score = -1
+
+    for tr_q, ar_q in pairs:
+        # 1. First probe lyrics.ovh if both track and artist are known
+        if ar_q and len(ar_q) >= 2 and len(tr_q) >= 2:
+            try:
+                ovh_url = f"https://api.lyrics.ovh/v1/{urllib.parse.quote(ar_q)}/{urllib.parse.quote(tr_q)}"
+                req_ovh = urllib.request.Request(ovh_url, headers=headers)
+                with urllib.request.urlopen(req_ovh, timeout=2.5) as resp:
+                    if resp.status == 200:
+                        ovh_data = json.loads(resp.read().decode())
+                        ovh_lyrics = ovh_data.get("lyrics", "").strip()
+                        if len(ovh_lyrics) > 300:
+                            return {
+                                "found": True,
+                                "plain_lyrics": ovh_lyrics,
+                                "synced_lyrics": None,
+                                "track_name": tr_q,
+                                "artist_name": ar_q
+                            }
+            except Exception:
+                pass
+
+        # 2. Probe LRCLIB with structured track_name & artist_name, and fall back to broad query
+        urls = []
+        if ar_q:
+            urls.append(f"https://lrclib.net/api/search?track_name={urllib.parse.quote(tr_q)}&artist_name={urllib.parse.quote(ar_q)}")
+        urls.append(f"https://lrclib.net/api/search?track_name={urllib.parse.quote(tr_q)}")
+        if ar_q:
+            urls.append(f"https://lrclib.net/api/search?q={urllib.parse.quote(tr_q + ' ' + ar_q)}")
+        else:
+            urls.append(f"https://lrclib.net/api/search?q={urllib.parse.quote(tr_q)}")
+
+        for url in urls:
+            try:
+                req = urllib.request.Request(url, headers=headers)
+                with urllib.request.urlopen(req, timeout=3.5) as response:
+                    if response.status == 200:
+                        items = json.loads(response.read().decode())
+                        if isinstance(items, list):
+                            for item in items:
+                                plain = item.get("plainLyrics") or ""
+                                synced = strip_lrc_timestamps(item.get("syncedLyrics") or "")
+                                full = synced if len(synced) > len(plain) else plain
+                                if not full or len(full.strip()) < 20:
+                                    continue
+
+                                it_name = (item.get("trackName") or "").lower()
+                                it_artist = (item.get("artistName") or "").lower()
+
+                                # Penalize remixes, cuts, sped up or snippets
+                                is_cut = any(bad in it_name or bad in it_artist for bad in ["lofi", "remix", "sped up", "slowed", "snippet", "short"])
+                                score = len(full) - (800 if is_cut else 0)
+
+                                if score > best_score:
+                                    best_score = score
+                                    best_candidate = {
+                                        "found": True,
+                                        "plain_lyrics": full.strip(),
+                                        "synced_lyrics": None,
+                                        "track_name": item.get("trackName"),
+                                        "artist_name": item.get("artistName")
+                                    }
+                                    # If unabridged authentic lyrics found, return immediately
+                                    if best_score > 1500 and not is_cut:
+                                        return best_candidate
+            except Exception:
+                pass
+
+        if best_candidate and len(best_candidate.get("plain_lyrics", "")) > 1000:
+            return best_candidate
+
+    if best_candidate:
+        return best_candidate
 
     return {
         "found": False,

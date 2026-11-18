@@ -94,6 +94,14 @@ public class MusicPlayerManager {
             notifyState(true);
             Track current = getCurrentTrack();
             if (current != null) {
+                try {
+                    int totalMs = mp.getDuration();
+                    if (totalMs > 0 && current.getDurationSeconds() <= 0) {
+                        int durationSec = totalMs / 1000;
+                        current.setDurationSeconds(durationSec);
+                        ApiClient.getInstance(context).updateTrackDuration(current.getId(), durationSec, null);
+                    }
+                } catch (Exception ignored) {}
                 notifyTrackChanged(current);
             }
             MediaNotificationService.start(context);

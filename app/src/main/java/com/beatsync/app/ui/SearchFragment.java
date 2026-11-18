@@ -244,7 +244,7 @@ public class SearchFragment extends Fragment implements MusicPlayerManager.Playb
     @Override
     public void onTrackChanged(Track track) {
         if (adapter != null && track != null) {
-            adapter.setPlayingTrackId(track.getId());
+            adapter.setPlayingTrack(track);
         }
     }
 

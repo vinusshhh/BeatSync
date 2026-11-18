@@ -309,7 +309,7 @@ public class PlaylistDetailActivity extends AppCompatActivity implements MusicPl
     @Override
     public void onTrackChanged(Track track) {
         if (adapter != null && track != null) {
-            adapter.setPlayingTrackId(track.getId());
+            adapter.setPlayingTrack(track);
         }
     }
 
