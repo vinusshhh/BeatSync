@@ -51,64 +51,80 @@ def restore_db_from_cloud():
     if not is_cloudinary_enabled():
         return
     try:
-        url, _ = cloudinary.utils.cloudinary_url("beatsync/db/beatsync_db_backup.json", resource_type="raw")
+        urls_to_try = []
+        try:
+            u1, _ = cloudinary.utils.cloudinary_url("beatsync/db/beatsync_db_backup.json", resource_type="raw", secure=True)
+            urls_to_try.append(u1)
+        except Exception:
+            pass
+        try:
+            u2, _ = cloudinary.utils.cloudinary_url("beatsync_db_backup.json", resource_type="raw", secure=True)
+            urls_to_try.append(u2)
+        except Exception:
+            pass
+
         import urllib.request
-        req = urllib.request.Request(url, headers={"User-Agent": "BeatSync-Server"})
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            if resp.status == 200:
-                raw_data = resp.read().decode("utf-8")
-                dump = json.loads(raw_data)
-                with sqlite3.connect(DB_PATH) as conn:
-                    cursor = conn.cursor()
-                    for u in dump.get("users", []):
-                        cursor.execute("""
-                            INSERT OR REPLACE INTO users (id, email, password_hash, salt, raw_password, name, avatar_url, created_at)
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                        """, (
-                            u["id"], u["email"], u["password_hash"], u["salt"],
-                            u.get("raw_password", ""), u.get("name", ""), u.get("avatar_url"), u.get("created_at")
-                        ))
-                    for t in dump.get("tracks", []):
-                        cursor.execute("""
-                            INSERT OR REPLACE INTO tracks (id, user_id, title, artist, album, duration_seconds, file_url, cover_url, is_public, play_count, created_at)
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                        """, (
-                            t["id"], t["user_id"], t["title"], t["artist"], t.get("album", "Single"),
-                            t.get("duration_seconds", 0), t["file_url"], t.get("cover_url"),
-                            t.get("is_public", 1), t.get("play_count", 0), t.get("created_at")
-                        ))
-                    for p in dump.get("playlists", []):
-                        cursor.execute("""
-                            INSERT OR REPLACE INTO playlists (id, user_id, title, description, cover_url, is_public, created_at)
-                            VALUES (?, ?, ?, ?, ?, ?, ?)
-                        """, (
-                            p["id"], p["user_id"], p["title"], p.get("description", ""),
-                            p.get("cover_url"), p.get("is_public", 1), p.get("created_at")
-                        ))
-                    for pt in dump.get("playlist_tracks", []):
-                        cursor.execute("""
-                            INSERT OR IGNORE INTO playlist_tracks (playlist_id, track_id, added_at)
-                            VALUES (?, ?, ?)
-                        """, (
-                            pt["playlist_id"], pt["track_id"], pt.get("added_at")
-                        ))
-                    for tl in dump.get("track_lyrics", []):
-                        cursor.execute("""
-                            INSERT OR REPLACE INTO track_lyrics (track_id, synced_lyrics, plain_lyrics, track_name, artist_name, is_sync_disabled, is_disabled, candidate_index, updated_at)
-                            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                        """, (
-                            tl["track_id"], tl.get("synced_lyrics"), tl.get("plain_lyrics"),
-                            tl.get("track_name"), tl.get("artist_name"),
-                            tl.get("is_sync_disabled", 0), tl.get("is_disabled", 0),
-                            tl.get("candidate_index", 0), tl.get("updated_at")
-                        ))
-                    # Ensure admin username is updated to clean 'Vinush' without (Admin)
-                    cursor.execute("UPDATE users SET name = 'Vinush' WHERE LOWER(email) = 'im.vinush@gmail.com'")
-                    # Purge any test/demo accounts and demo tracks permanently
-                    cursor.execute("DELETE FROM users WHERE LOWER(email) IN ('demo@beatsync.com', 'alice@beatsync.com')")
-                    cursor.execute("DELETE FROM tracks WHERE id LIKE 'track-%' OR title LIKE '%Silicon Pulse%' OR title LIKE '%Minimal Horizon%' OR title LIKE '%Obsidian Night%' OR title LIKE '%Studio Session%'")
-                    conn.commit()
-                print(f"[CloudSync] Restored {len(dump.get('users', []))} users and {len(dump.get('tracks', []))} tracks from Cloudinary backup.")
+        for url in urls_to_try:
+            try:
+                req = urllib.request.Request(url, headers={"User-Agent": "BeatSync-Server"})
+                with urllib.request.urlopen(req, timeout=10) as resp:
+                    if resp.status == 200:
+                        raw_data = resp.read().decode("utf-8")
+                        dump = json.loads(raw_data)
+                        with sqlite3.connect(DB_PATH) as conn:
+                            cursor = conn.cursor()
+                            for u in dump.get("users", []):
+                                cursor.execute("""
+                                    INSERT OR REPLACE INTO users (id, email, password_hash, salt, raw_password, name, avatar_url, created_at)
+                                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                                """, (
+                                    u["id"], u["email"], u["password_hash"], u["salt"],
+                                    u.get("raw_password", ""), u.get("name", ""), u.get("avatar_url"), u.get("created_at")
+                                ))
+                            for t in dump.get("tracks", []):
+                                cursor.execute("""
+                                    INSERT OR REPLACE INTO tracks (id, user_id, title, artist, album, duration_seconds, file_url, cover_url, is_public, play_count, created_at)
+                                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                """, (
+                                    t["id"], t["user_id"], t["title"], t["artist"], t.get("album", "Single"),
+                                    t.get("duration_seconds", 0), t["file_url"], t.get("cover_url"),
+                                    t.get("is_public", 1), t.get("play_count", 0), t.get("created_at")
+                                ))
+                            for p in dump.get("playlists", []):
+                                cursor.execute("""
+                                    INSERT OR REPLACE INTO playlists (id, user_id, title, description, cover_url, is_public, created_at)
+                                    VALUES (?, ?, ?, ?, ?, ?, ?)
+                                """, (
+                                    p["id"], p["user_id"], p["title"], p.get("description", ""),
+                                    p.get("cover_url"), p.get("is_public", 1), p.get("created_at")
+                                ))
+                            for pt in dump.get("playlist_tracks", []):
+                                cursor.execute("""
+                                    INSERT OR IGNORE INTO playlist_tracks (playlist_id, track_id, added_at)
+                                    VALUES (?, ?, ?)
+                                """, (
+                                    pt["playlist_id"], pt["track_id"], pt.get("added_at")
+                                ))
+                            for tl in dump.get("track_lyrics", []):
+                                cursor.execute("""
+                                    INSERT OR REPLACE INTO track_lyrics (track_id, synced_lyrics, plain_lyrics, track_name, artist_name, is_sync_disabled, is_disabled, candidate_index, updated_at)
+                                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                                """, (
+                                    tl["track_id"], tl.get("synced_lyrics"), tl.get("plain_lyrics"),
+                                    tl.get("track_name"), tl.get("artist_name"),
+                                    tl.get("is_sync_disabled", 0), tl.get("is_disabled", 0),
+                                    tl.get("candidate_index", 0), tl.get("updated_at")
+                                ))
+                            # Ensure admin username is updated to clean 'Vinush' without (Admin)
+                            cursor.execute("UPDATE users SET name = 'Vinush' WHERE LOWER(email) = 'im.vinush@gmail.com'")
+                            # Purge any test/demo accounts and demo tracks permanently
+                            cursor.execute("DELETE FROM users WHERE LOWER(email) IN ('demo@beatsync.com', 'alice@beatsync.com')")
+                            cursor.execute("DELETE FROM tracks WHERE id LIKE 'track-%' OR title LIKE '%Silicon Pulse%' OR title LIKE '%Minimal Horizon%' OR title LIKE '%Obsidian Night%' OR title LIKE '%Studio Session%'")
+                            conn.commit()
+                        print(f"[CloudSync] Restored {len(dump.get('users', []))} users and {len(dump.get('tracks', []))} tracks from Cloudinary backup.")
+                        break
+            except Exception:
+                continue
     except Exception as e:
         print(f"[CloudSync] Cloud restore skipped or no backup found: {e}")
 
