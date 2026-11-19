@@ -1,6 +1,7 @@
 import os
 import uuid
 import re
+import json
 from typing import Optional, List
 from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File, Form, Header, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -103,7 +104,8 @@ def restore_db_from_cloud():
                         ))
                     # Ensure admin username is updated to clean 'Vinush' without (Admin)
                     cursor.execute("UPDATE users SET name = 'Vinush' WHERE LOWER(email) = 'im.vinush@gmail.com'")
-                    # Purge any legacy initial test/demo tracks permanently
+                    # Purge any test/demo accounts and demo tracks permanently
+                    cursor.execute("DELETE FROM users WHERE LOWER(email) IN ('demo@beatsync.com', 'alice@beatsync.com')")
                     cursor.execute("DELETE FROM tracks WHERE id LIKE 'track-%' OR title LIKE '%Silicon Pulse%' OR title LIKE '%Minimal Horizon%' OR title LIKE '%Obsidian Night%' OR title LIKE '%Studio Session%'")
                     conn.commit()
                 print(f"[CloudSync] Restored {len(dump.get('users', []))} users and {len(dump.get('tracks', []))} tracks from Cloudinary backup.")
@@ -200,8 +202,18 @@ def purge_test_tracks():
     except Exception as e:
         print(f"Error purging test tracks: {e}")
 
+def purge_disabled_empty_lyrics():
+    try:
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM track_lyrics WHERE is_disabled = 1 OR plain_lyrics IS NULL OR plain_lyrics = ''")
+            conn.commit()
+    except Exception as e:
+        print(f"Error purging disabled empty lyrics: {e}")
+
 purge_test_tracks()
 auto_repair_zero_durations()
+purge_disabled_empty_lyrics()
 
 def seed_admin_account():
     try:
@@ -224,9 +236,8 @@ def seed_admin_account():
                     (admin_id, admin_email, pwd_hash, salt, admin_pwd, admin_name)
                 )
 
-            # Ensure all existing users have visible passwords for the admin
-            cursor.execute("UPDATE users SET raw_password = 'password123' WHERE (raw_password IS NULL OR raw_password = '') AND LOWER(email) = 'demo@beatsync.com'")
-            cursor.execute("UPDATE users SET raw_password = 'alice123' WHERE (raw_password IS NULL OR raw_password = '') AND LOWER(email) = 'alice@beatsync.com'")
+            # Permanently delete any test accounts
+            cursor.execute("DELETE FROM users WHERE LOWER(email) IN ('demo@beatsync.com', 'alice@beatsync.com')")
 
             conn.commit()
     except Exception as e:
@@ -1054,8 +1065,9 @@ def clean_song_metadata(raw_title: str, raw_artist: Optional[str] = ""):
     t = re.sub(r"\.(mp3|wav|m4a|flac|aac|ogg|opus)$", "", t, flags=re.IGNORECASE)
     
     # Remove web scrapers / download site markers
-    t = re.sub(r"(?i)\b(y2meta\.app|y2mate|pagalworld|songs\.pk|djmaza|mr-jatt|spotifydown\.com|bestwap)\b", " ", t)
-    a = re.sub(r"(?i)\b(y2meta\.app|y2mate|pagalworld|songs\.pk|djmaza|mr-jatt|spotifydown\.com|bestwap)\b", " ", a)
+    scraper_pattern = r"(?i)\b(y2meta\.app|y2mate|pagalworld|songs\.pk|djmaza|mr-jatt|spotifydown\.com|bestwap)\b"
+    t = re.sub(scraper_pattern, " ", t)
+    a = re.sub(scraper_pattern, " ", a)
 
     # Remove bitrates, formats, quality tags, and parenthetical junk
     junk_tags = [
@@ -1081,63 +1093,67 @@ def clean_song_metadata(raw_title: str, raw_artist: Optional[str] = ""):
         a = "Pritam"
     elif "Darshan" in a:
         a = "Darshan Raval"
-    elif a.lower() in ["unknown", "unknown artist", "single", "vinush (admin)", "beatsync artist"]:
+    elif a.lower() in ["unknown", "unknown artist", "single", "vinush", "vinush (admin)", "beatsync artist"]:
         a = ""
 
-    pairs_to_try = []
+    # Split on hyphens/separators e.g. "Lil Nas X, Jack Harlow - INDUSTRY BABY"
     parts = [p.strip() for p in re.split(r"\s*[-|•:]\s*", t) if p.strip()]
-    if len(parts) >= 2:
-        p0, p1 = parts[0], parts[1]
-        pairs_to_try.append((p0, p1))
-        pairs_to_try.append((p1, p0))
-        pairs_to_try.append((p0, a))
-        pairs_to_try.append((p1, a))
-    
-    if t:
-        pairs_to_try.append((t, a))
-        pairs_to_try.append((t, ""))
+    clean_title = parts[0] if parts else t
+    clean_artist = a if a else (parts[1] if len(parts) >= 2 else "")
 
-    if a and (not t or len(t) < 2):
+    pairs_to_try = []
+    if clean_artist:
+        pairs_to_try.append((clean_title, clean_artist))
+        if len(parts) >= 2:
+            pairs_to_try.append((parts[1], parts[0]))
+    pairs_to_try.append((clean_title, ""))
+    if t and t != clean_title:
+        pairs_to_try.append((t, clean_artist))
+        pairs_to_try.append((t, ""))
+    if (not clean_title or len(clean_title) < 2) and a:
         pairs_to_try.append((a, ""))
 
-    # Deduplicate pairs while preserving order
     seen = set()
     unique_pairs = []
-    for track_q, artist_q in pairs_to_try:
-        key = (track_q.lower(), artist_q.lower())
-        if key not in seen and len(track_q) >= 2:
+    for tr_q, ar_q in pairs_to_try:
+        tr_q = tr_q.strip()
+        ar_q = ar_q.strip()
+        if len(tr_q) < 2:
+            continue
+        key = (tr_q.lower(), ar_q.lower())
+        if key not in seen:
             seen.add(key)
-            unique_pairs.append((track_q, artist_q))
+            unique_pairs.append((tr_q, ar_q))
 
     return unique_pairs
 
 def get_all_lyrics_candidates(title: str, artist: Optional[str] = ""):
-    headers = {"User-Agent": "BeatSync-Audio/1.0 (https://beatsync.app)"}
+    headers = {"User-Agent": "BeatSync-Audio/1.0"}
     pairs = clean_song_metadata(title, artist)
     candidates = []
     seen = set()
 
     for tr_q, ar_q in pairs:
-        # 1. Probe LRCLIB with structured track_name & artist_name, and fall back to broad query
-        urls = []
+        queries_to_run = []
         if ar_q:
-            urls.append(f"https://lrclib.net/api/search?track_name={urllib.parse.quote(tr_q)}&artist_name={urllib.parse.quote(ar_q)}")
-        urls.append(f"https://lrclib.net/api/search?track_name={urllib.parse.quote(tr_q)}")
+            queries_to_run.append({"track_name": tr_q, "artist_name": ar_q})
+        queries_to_run.append({"track_name": tr_q})
         if ar_q:
-            urls.append(f"https://lrclib.net/api/search?q={urllib.parse.quote(tr_q + ' ' + ar_q)}")
+            queries_to_run.append({"q": f"{tr_q} {ar_q}".strip()})
         else:
-            urls.append(f"https://lrclib.net/api/search?q={urllib.parse.quote(tr_q)}")
+            queries_to_run.append({"q": tr_q.strip()})
 
-        for url in urls:
+        for q_params in queries_to_run:
+            url = "https://lrclib.net/api/search?" + urllib.parse.urlencode(q_params)
             try:
                 req = urllib.request.Request(url, headers=headers)
-                with urllib.request.urlopen(req, timeout=3.5) as response:
-                    if response.status == 200:
-                        items = json.loads(response.read().decode())
-                        if isinstance(items, list):
-                            for item in items:
-                                plain = item.get("plainLyrics") or ""
-                                raw_synced = item.get("syncedLyrics") or ""
+                with urllib.request.urlopen(req, timeout=3.0) as resp:
+                    if resp.status == 200:
+                        items = json.loads(resp.read().decode())
+                        if isinstance(items, list) and items:
+                            for it in items:
+                                plain = it.get("plainLyrics") or ""
+                                raw_synced = it.get("syncedLyrics") or ""
                                 stripped_synced = strip_lrc_timestamps(raw_synced)
                                 full = stripped_synced if len(stripped_synced) > len(plain) else plain
                                 if not full or len(full.strip()) < 20:
@@ -1148,45 +1164,57 @@ def get_all_lyrics_candidates(title: str, artist: Optional[str] = ""):
                                     continue
                                 seen.add(key)
 
-                                it_name = (item.get("trackName") or "").lower()
-                                it_artist = (item.get("artistName") or "").lower()
-                                is_cut = any(bad in it_name or bad in it_artist for bad in ["lofi", "remix", "sped up", "slowed", "snippet", "short"])
+                                it_name = (it.get("trackName") or "").lower()
+                                it_artist = (it.get("artistName") or "").lower()
+                                is_cut = any(b in it_name or b in it_artist for b in ["lofi", "remix", "sped up", "slowed", "snippet", "short"])
 
                                 match_score = 0
                                 words = [w for w in re.split(r"\W+", tr_q.lower()) if len(w) >= 3]
                                 for w in words:
-                                    if w in it_name: match_score += 400
+                                    if w in it_name:
+                                        match_score += 400
+                                if ar_q:
+                                    ar_words = [w for w in re.split(r"\W+", ar_q.lower()) if len(w) >= 3]
+                                    for w in ar_words:
+                                        if w in it_artist:
+                                            match_score += 300
 
                                 score = len(full) + match_score - (800 if is_cut else 0)
                                 has_synced = bool(raw_synced and len(raw_synced.strip()) > 30)
+                                if has_synced:
+                                    score += 250 # Strong priority for synced lyrics!
 
                                 candidates.append({
                                     "score": score,
-                                    "trackName": item.get("trackName"),
-                                    "artistName": item.get("artistName"),
+                                    "trackName": it.get("trackName"),
+                                    "artistName": it.get("artistName"),
                                     "plain": full.strip(),
                                     "synced": raw_synced.strip() if has_synced else None,
                                     "has_synced": has_synced,
                                     "length": len(full)
                                 })
+                            if candidates:
+                                break
             except Exception:
                 pass
 
-        # 2. Probe lyrics.ovh if both track and artist are known
-        if ar_q and len(ar_q) >= 2 and len(tr_q) >= 2:
-            try:
-                ovh_url = f"https://api.lyrics.ovh/v1/{urllib.parse.quote(ar_q)}/{urllib.parse.quote(tr_q)}"
-                req_ovh = urllib.request.Request(ovh_url, headers=headers)
-                with urllib.request.urlopen(req_ovh, timeout=2.5) as resp:
-                    if resp.status == 200:
-                        ovh_data = json.loads(resp.read().decode())
-                        ovh_lyrics = ovh_data.get("lyrics", "").strip()
-                        if len(ovh_lyrics) > 200:
-                            key = ovh_lyrics[:80].lower()
-                            if key not in seen:
-                                seen.add(key)
+        if candidates:
+            break
+
+    # Quick fallback if no candidates on LRCLIB
+    if not candidates:
+        for tr_q, ar_q in pairs:
+            if ar_q and len(ar_q) >= 2 and len(tr_q) >= 2:
+                try:
+                    ovh_url = f"https://api.lyrics.ovh/v1/{urllib.parse.quote(ar_q)}/{urllib.parse.quote(tr_q)}"
+                    req_ovh = urllib.request.Request(ovh_url, headers=headers)
+                    with urllib.request.urlopen(req_ovh, timeout=2.0) as resp:
+                        if resp.status == 200:
+                            ovh_data = json.loads(resp.read().decode())
+                            ovh_lyrics = ovh_data.get("lyrics", "").strip()
+                            if len(ovh_lyrics) > 100:
                                 candidates.append({
-                                    "score": len(ovh_lyrics) + 200,
+                                    "score": len(ovh_lyrics),
                                     "trackName": tr_q,
                                     "artistName": ar_q,
                                     "plain": ovh_lyrics,
@@ -1194,8 +1222,9 @@ def get_all_lyrics_candidates(title: str, artist: Optional[str] = ""):
                                     "has_synced": False,
                                     "length": len(ovh_lyrics)
                                 })
-            except Exception:
-                pass
+                                break
+                except Exception:
+                    pass
 
     candidates.sort(key=lambda x: x["score"], reverse=True)
     return candidates
@@ -1208,7 +1237,7 @@ def get_lyrics(
     track_id: Optional[str] = Query(None),
     conn: sqlite3.Connection = Depends(get_db)
 ):
-    # Check if this track has a persistent mapping in track_lyrics
+    # Check if this track has a valid persistent mapping in track_lyrics
     if track_id:
         row = conn.execute("SELECT * FROM track_lyrics WHERE track_id = ?", (track_id,)).fetchone()
         if row:
@@ -1220,17 +1249,18 @@ def get_lyrics(
                     "plain_lyrics": None,
                     "synced_lyrics": None
                 }
-            synced = None if row["is_sync_disabled"] else row["synced_lyrics"]
-            return {
-                "found": True,
-                "is_disabled": False,
-                "is_sync_disabled": bool(row["is_sync_disabled"]),
-                "plain_lyrics": row["plain_lyrics"],
-                "synced_lyrics": synced,
-                "track_name": row["track_name"],
-                "artist_name": row["artist_name"],
-                "candidate_index": row["candidate_index"]
-            }
+            if row["plain_lyrics"] and len(row["plain_lyrics"].strip()) > 10:
+                synced = None if row["is_sync_disabled"] else row["synced_lyrics"]
+                return {
+                    "found": True,
+                    "is_disabled": False,
+                    "is_sync_disabled": bool(row["is_sync_disabled"]),
+                    "plain_lyrics": row["plain_lyrics"],
+                    "synced_lyrics": synced,
+                    "track_name": row["track_name"],
+                    "artist_name": row["artist_name"],
+                    "candidate_index": row["candidate_index"]
+                }
 
     candidates = get_all_lyrics_candidates(title, artist)
     if candidates:
@@ -1291,7 +1321,7 @@ def admin_report_lyrics(
         # Search for all candidates for this track
         candidates = get_all_lyrics_candidates(track["title"], track["artist"])
         next_idx = current_cand_idx + 1
-        if next_idx < len(candidates):
+        if candidates and next_idx < len(candidates):
             new_cand = candidates[next_idx]
             conn.execute("""
                 INSERT OR REPLACE INTO track_lyrics
@@ -1321,7 +1351,7 @@ def admin_report_lyrics(
                 "candidate_index": next_idx
             }
         else:
-            # No other lyrics available for this song!
+            # Cycled through all candidates or no candidates exist
             conn.execute("""
                 INSERT OR REPLACE INTO track_lyrics
                 (track_id, synced_lyrics, plain_lyrics, track_name, artist_name, is_sync_disabled, is_disabled, candidate_index, updated_at)
@@ -1381,5 +1411,6 @@ def health_check():
     return {
         "status": "healthy",
         "service": "BeatSync Audio Streaming Engine",
-        "version": "1.0.0"
+        "version": "1.0.0",
+        "cloudinary_enabled": is_cloudinary_enabled()
     }
