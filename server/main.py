@@ -35,7 +35,10 @@ def is_cloudinary_enabled():
             cloudinary.config(cloudinary_url=c_url.strip(), secure=True)
             return bool(cloudinary.config().cloud_name)
         if c_name and c_key and c_secret:
-            cloudinary.config(cloud_name=c_name.strip(), api_key=c_key.strip(), api_secret=c_secret.strip(), secure=True)
+            c_name_clean = c_name.strip()
+            if c_name_clean.lower() in ["root", "none", "your_cloud_name", ""]:
+                return False
+            cloudinary.config(cloud_name=c_name_clean, api_key=c_key.strip(), api_secret=c_secret.strip(), secure=True)
             return bool(cloudinary.config().cloud_name)
     except Exception as e:
         print(f"[Cloudinary] Configuration error: {e}")
