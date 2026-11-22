@@ -78,8 +78,15 @@ public class ApiClient {
     }
 
     private Request.Builder newAuthenticatedRequest(String path) {
+        String finalUrl;
+        if (path != null && (path.startsWith("http://") || path.startsWith("https://"))) {
+            finalUrl = path;
+        } else {
+            String cleanPath = (path != null && !path.startsWith("/")) ? "/" + path : (path != null ? path : "");
+            finalUrl = getBaseUrl() + cleanPath;
+        }
         Request.Builder builder = new Request.Builder()
-                .url(getBaseUrl() + path);
+                .url(finalUrl);
         String token = AuthManager.getInstance(context).getToken();
         if (token != null) {
             builder.addHeader("Authorization", "Bearer " + token);

@@ -30,11 +30,15 @@ def is_cloudinary_enabled():
     c_name = os.environ.get("CLOUDINARY_CLOUD_NAME")
     c_key = os.environ.get("CLOUDINARY_API_KEY")
     c_secret = os.environ.get("CLOUDINARY_API_SECRET")
-    if c_url:
-        return True
-    if c_name and c_key and c_secret:
-        cloudinary.config(cloud_name=c_name, api_key=c_key, api_secret=c_secret, secure=True)
-        return True
+    try:
+        if c_url and c_url.strip():
+            cloudinary.config(cloudinary_url=c_url.strip(), secure=True)
+            return bool(cloudinary.config().cloud_name)
+        if c_name and c_key and c_secret:
+            cloudinary.config(cloud_name=c_name.strip(), api_key=c_key.strip(), api_secret=c_secret.strip(), secure=True)
+            return bool(cloudinary.config().cloud_name)
+    except Exception as e:
+        print(f"[Cloudinary] Configuration error: {e}")
     return False
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -151,17 +155,18 @@ def backup_db_to_cloud():
             }
             import io
             bio = io.BytesIO(json.dumps(dump, default=str).encode("utf-8"))
-            cloudinary.uploader.upload(
+            res = cloudinary.uploader.upload(
                 bio,
                 resource_type="raw",
-                folder="beatsync/db",
                 public_id="beatsync_db_backup.json",
                 overwrite=True,
                 invalidate=True
             )
-            print(f"[CloudSync] Synced {len(users)} users, {len(tracks)} tracks to Cloudinary raw storage.")
+            print(f"[CloudSync] Synced {len(users)} users, {len(tracks)} tracks to Cloudinary raw storage. URL: {res.get('secure_url')}")
+            return res.get("secure_url")
     except Exception as e:
         print(f"[CloudSync] Backup to cloud failed: {e}")
+        return None
 
 restore_db_from_cloud()
 
@@ -1430,3 +1435,38 @@ def health_check():
         "version": "1.0.0",
         "cloudinary_enabled": is_cloudinary_enabled()
     }
+
+@app.get("/api/cloud/diag")
+def cloud_diag():
+    enabled = is_cloudinary_enabled()
+    c_name = getattr(cloudinary.config(), "cloud_name", None) if CLOUDINARY_AVAILABLE else None
+    res = {
+        "cloudinary_enabled": enabled,
+        "cloud_name": c_name,
+        "has_c_url": bool(os.environ.get("CLOUDINARY_URL")),
+    }
+    if enabled:
+        try:
+            import io
+            test_bio = io.BytesIO(b'{"test": "ok"}')
+            up = cloudinary.uploader.upload(test_bio, resource_type="raw", public_id="beatsync_test_ping.json", overwrite=True)
+            res["test_upload"] = {
+                "status": "success",
+                "secure_url": up.get("secure_url")
+            }
+            import urllib.request
+            with urllib.request.urlopen(up["secure_url"], timeout=5) as r:
+                res["test_read"] = r.read().decode()
+        except Exception as e:
+            res["test_upload_error"] = str(e)
+            
+        backup_url, _ = cloudinary.utils.cloudinary_url("beatsync_db_backup.json", resource_type="raw", secure=True)
+        res["backup_url"] = backup_url
+        try:
+            import urllib.request
+            with urllib.request.urlopen(backup_url, timeout=5) as r:
+                res["backup_fetch_status"] = r.status
+                res["backup_size_bytes"] = len(r.read())
+        except Exception as e:
+            res["backup_fetch_error"] = str(e)
+    return res
