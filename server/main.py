@@ -15,12 +15,32 @@ from auth import (
     get_current_user, get_optional_user, get_admin_user, decode_token
 )
 
+# Sanitize and normalize CLOUDINARY_URL before importing cloudinary
+c_raw = os.environ.get("CLOUDINARY_URL", "")
+if c_raw:
+    c_clean = c_raw.strip().strip("'\"")
+    # If the user pasted "CLOUDINARY_URL=cloudinary://..."
+    if c_clean.startswith("CLOUDINARY_URL="):
+        c_clean = c_clean[len("CLOUDINARY_URL="):].strip().strip("'\"")
+    if not c_clean.startswith("cloudinary://"):
+        if "://" in c_clean:
+            c_clean = "cloudinary://" + c_clean.split("://", 1)[1]
+        elif "@" in c_clean:
+            c_clean = "cloudinary://" + c_clean
+        else:
+            # Not a valid url format; remove to prevent import crash
+            os.environ.pop("CLOUDINARY_URL", None)
+            c_clean = None
+    if c_clean and c_clean.startswith("cloudinary://"):
+        os.environ["CLOUDINARY_URL"] = c_clean
+
 # Optional Cloudinary Storage Integration for Free Large Storage (25GB = 6000+ tracks)
 try:
     import cloudinary
     import cloudinary.uploader
     CLOUDINARY_AVAILABLE = True
-except ImportError:
+except Exception as e:
+    print(f"Warning: Cloudinary import/initialization failed: {e}")
     CLOUDINARY_AVAILABLE = False
 
 def is_cloudinary_enabled():
