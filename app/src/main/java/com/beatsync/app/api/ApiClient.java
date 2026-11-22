@@ -54,9 +54,10 @@ public class ApiClient {
 
         this.client = new OkHttpClient.Builder()
                 .dns(customDns)
-                .connectTimeout(30, TimeUnit.SECONDS)
-                .readTimeout(60, TimeUnit.SECONDS)
-                .writeTimeout(60, TimeUnit.SECONDS)
+                .connectTimeout(45, TimeUnit.SECONDS)
+                .readTimeout(120, TimeUnit.SECONDS)
+                .writeTimeout(120, TimeUnit.SECONDS)
+                .retryOnConnectionFailure(true)
                 .build();
         this.gson = new Gson();
         this.mainHandler = new Handler(Looper.getMainLooper());

@@ -3,7 +3,7 @@ import uuid
 import re
 import json
 from typing import Optional, List
-from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File, Form, Header, Query, Request
+from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File, Form, Header, Query, Request, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse, FileResponse
 from pydantic import BaseModel
@@ -52,11 +52,17 @@ def is_cloudinary_enabled():
     c_secret = os.environ.get("CLOUDINARY_API_SECRET")
     try:
         if c_url and c_url.strip():
-            cloudinary.config(cloudinary_url=c_url.strip(), secure=True)
+            c_url_clean = c_url.strip()
+            # If the user has not replaced placeholder keys like <your_api_key>
+            if "<" in c_url_clean or "your_" in c_url_clean.lower() or "api_key" in c_url_clean.lower():
+                return False
+            cloudinary.config(cloudinary_url=c_url_clean, secure=True)
             return bool(cloudinary.config().cloud_name)
         if c_name and c_key and c_secret:
             c_name_clean = c_name.strip()
             if c_name_clean.lower() in ["root", "none", "your_cloud_name", ""]:
+                return False
+            if "<" in c_key or "<" in c_secret or "your_" in c_key.lower():
                 return False
             cloudinary.config(cloud_name=c_name_clean, api_key=c_key.strip(), api_secret=c_secret.strip(), secure=True)
             return bool(cloudinary.config().cloud_name)
@@ -423,8 +429,51 @@ def reset_password(
 
 # ----------------- TRACK ENDPOINTS -----------------
 
+def sync_track_to_cloudinary(track_id: str, audio_filepath: str, cover_filepath: Optional[str] = None):
+    if not is_cloudinary_enabled():
+        return
+    try:
+        cloud_audio = cloudinary.uploader.upload(
+            audio_filepath,
+            resource_type="video",
+            folder="beatsync/audio",
+            public_id=f"track_{track_id}"
+        )
+        file_url = cloud_audio.get("secure_url")
+        dur = 0
+        if "duration" in cloud_audio:
+            try:
+                dur = int(round(float(cloud_audio["duration"])))
+            except Exception:
+                pass
+                
+        cover_url = None
+        if cover_filepath and os.path.exists(cover_filepath):
+            cloud_cover = cloudinary.uploader.upload(
+                cover_filepath,
+                resource_type="image",
+                folder="beatsync/covers",
+                public_id=f"cover_{track_id}"
+            )
+            cover_url = cloud_cover.get("secure_url")
+            
+        with sqlite3.connect(DB_PATH) as conn:
+            if file_url:
+                conn.execute("UPDATE tracks SET file_url = ? WHERE id = ?", (file_url, track_id))
+            if cover_url:
+                conn.execute("UPDATE tracks SET cover_url = ? WHERE id = ?", (cover_url, track_id))
+            if dur > 0:
+                conn.execute("UPDATE tracks SET duration_seconds = ? WHERE id = ? AND (duration_seconds IS NULL OR duration_seconds <= 0)", (dur, track_id))
+            conn.commit()
+            
+        backup_db_to_cloud()
+        print(f"[CloudSync] Successfully synced track {track_id} to Cloudinary.")
+    except Exception as e:
+        print(f"[CloudSync] Cloudinary sync failed for track {track_id}: {e}")
+
 @app.post("/api/tracks/upload")
 async def upload_track(
+    background_tasks: BackgroundTasks,
     title: str = Form(...),
     artist: str = Form(...),
     album: Optional[str] = Form("Single"),
@@ -462,35 +511,6 @@ async def upload_track(
 
     file_url = f"/api/tracks/{track_id}/stream"
     cover_url = f"/api/covers/{cover_filename}" if cover_filename else None
-    
-    # Optional Free Cloudinary Cloud Storage upload (stores thousands of songs permanently)
-    if is_cloudinary_enabled():
-        try:
-            cloud_audio = cloudinary.uploader.upload(
-                audio_filepath,
-                resource_type="video", # Cloudinary stores audio under video resource
-                folder="beatsync/audio",
-                public_id=f"track_{track_id}"
-            )
-            if "secure_url" in cloud_audio:
-                file_url = cloud_audio["secure_url"]
-            if "duration" in cloud_audio and (not duration_seconds or duration_seconds == 0):
-                try:
-                    duration_seconds = int(round(float(cloud_audio["duration"])))
-                except Exception:
-                    pass
-                
-            if cover_filepath:
-                cloud_cover = cloudinary.uploader.upload(
-                    cover_filepath,
-                    resource_type="image",
-                    folder="beatsync/covers",
-                    public_id=f"cover_{track_id}"
-                )
-                if "secure_url" in cloud_cover:
-                    cover_url = cloud_cover["secure_url"]
-        except Exception as e:
-            print(f"Cloudinary upload failed, using local file: {e}")
 
     if not duration_seconds or duration_seconds == 0:
         duration_seconds = probe_audio_duration(audio_filepath)
@@ -503,7 +523,12 @@ async def upload_track(
         (track_id, current_user["id"], title.strip(), artist.strip(), album.strip(), duration_seconds or 0, file_url, cover_url, 1 if is_public else 0)
     )
     conn.commit()
-    backup_db_to_cloud()
+
+    # Delegate heavy Cloudinary uploads to background task so client gets instant response in <1s
+    if is_cloudinary_enabled():
+        background_tasks.add_task(sync_track_to_cloudinary, track_id, audio_filepath, cover_filepath)
+    else:
+        background_tasks.add_task(backup_db_to_cloud)
     
     row = conn.execute("SELECT * FROM tracks WHERE id = ?", (track_id,)).fetchone()
     res = dict(row)
