@@ -15,29 +15,61 @@ from auth import (
     get_current_user, get_optional_user, get_admin_user, decode_token
 )
 
-# Sanitize and normalize CLOUDINARY_URL before importing cloudinary
-c_raw = os.environ.get("CLOUDINARY_URL", "")
-if c_raw:
-    c_clean = c_raw.strip().strip("'\"")
-    # If the user pasted "CLOUDINARY_URL=cloudinary://..."
-    if c_clean.startswith("CLOUDINARY_URL="):
-        c_clean = c_clean[len("CLOUDINARY_URL="):].strip().strip("'\"")
-    if not c_clean.startswith("cloudinary://"):
-        if "://" in c_clean:
-            c_clean = "cloudinary://" + c_clean.split("://", 1)[1]
-        elif "@" in c_clean:
-            c_clean = "cloudinary://" + c_clean
-        else:
-            # Not a valid url format; remove to prevent import crash
+# Robust Cloudinary Configuration Resolver
+c_raw_url = os.environ.get("CLOUDINARY_URL", "")
+c_env_key = os.environ.get("CLOUDINARY_API_KEY", "").strip()
+c_env_secret = os.environ.get("CLOUDINARY_API_SECRET", "").strip()
+c_env_name = os.environ.get("CLOUDINARY_CLOUD_NAME", "").strip()
+
+# 1. Determine Cloud Name (from env var, from URL suffix, or default to enenmmpz)
+resolved_cloud_name = ""
+if c_env_name and c_env_name.lower() not in ["root", "none", "your_cloud_name", ""]:
+    resolved_cloud_name = c_env_name
+elif "@" in c_raw_url:
+    part = c_raw_url.split("@")[-1].strip().strip("'\"").split("/")[0].split("?")[0]
+    if part and "<" not in part and "your_" not in part.lower():
+        resolved_cloud_name = part
+
+if not resolved_cloud_name:
+    resolved_cloud_name = "enenmmpz"
+
+# 2. Check if valid separate API Key and Secret are provided (from Render environment)
+has_valid_keys = (
+    bool(c_env_key) and bool(c_env_secret) and
+    "<" not in c_env_key and "your_" not in c_env_key.lower() and
+    "<" not in c_env_secret and "your_" not in c_env_secret.lower()
+)
+
+if has_valid_keys:
+    # Synthesize clean, working CLOUDINARY_URL
+    synth_url = f"cloudinary://{c_env_key}:{c_env_secret}@{resolved_cloud_name}"
+    os.environ["CLOUDINARY_URL"] = synth_url
+    os.environ["CLOUDINARY_CLOUD_NAME"] = resolved_cloud_name
+else:
+    # Sanitize existing CLOUDINARY_URL if present
+    if c_raw_url:
+        c_clean = c_raw_url.strip().strip("'\"")
+        if c_clean.startswith("CLOUDINARY_URL="):
+            c_clean = c_clean[len("CLOUDINARY_URL="):].strip().strip("'\"")
+        # If it contains placeholder dummy values, remove to prevent crash / invalid state
+        if "<" in c_clean or "your_" in c_clean.lower() or "api_key" in c_clean.lower():
             os.environ.pop("CLOUDINARY_URL", None)
-            c_clean = None
-    if c_clean and c_clean.startswith("cloudinary://"):
-        os.environ["CLOUDINARY_URL"] = c_clean
+        else:
+            if not c_clean.startswith("cloudinary://"):
+                if "://" in c_clean:
+                    c_clean = "cloudinary://" + c_clean.split("://", 1)[1]
+                elif "@" in c_clean:
+                    c_clean = "cloudinary://" + c_clean
+            if c_clean and c_clean.startswith("cloudinary://"):
+                os.environ["CLOUDINARY_URL"] = c_clean
+            else:
+                os.environ.pop("CLOUDINARY_URL", None)
 
 # Optional Cloudinary Storage Integration for Free Large Storage (25GB = 6000+ tracks)
 try:
     import cloudinary
     import cloudinary.uploader
+    import cloudinary.utils
     CLOUDINARY_AVAILABLE = True
 except Exception as e:
     print(f"Warning: Cloudinary import/initialization failed: {e}")
@@ -46,26 +78,36 @@ except Exception as e:
 def is_cloudinary_enabled():
     if not CLOUDINARY_AVAILABLE:
         return False
-    c_url = os.environ.get("CLOUDINARY_URL")
-    c_name = os.environ.get("CLOUDINARY_CLOUD_NAME")
-    c_key = os.environ.get("CLOUDINARY_API_KEY")
-    c_secret = os.environ.get("CLOUDINARY_API_SECRET")
+    c_url = os.environ.get("CLOUDINARY_URL", "")
+    c_name = os.environ.get("CLOUDINARY_CLOUD_NAME", "")
+    c_key = os.environ.get("CLOUDINARY_API_KEY", "")
+    c_secret = os.environ.get("CLOUDINARY_API_SECRET", "")
     try:
+        # Priority 1: Check separate keys if valid
+        if c_key and c_secret and ("<" not in c_key) and ("<" not in c_secret) and ("your_" not in c_key.lower()):
+            effective_name = c_name if (c_name and c_name.lower() not in ["root", "none", "your_cloud_name", ""]) else resolved_cloud_name
+            cloudinary.config(
+                cloud_name=effective_name,
+                api_key=c_key.strip(),
+                api_secret=c_secret.strip(),
+                secure=True
+            )
+            cfg = cloudinary.config()
+            return bool(cfg.cloud_name and cfg.api_key and cfg.api_secret and "<" not in str(cfg.api_key))
+
+        # Priority 2: Check synthesized or cleaned URL
         if c_url and c_url.strip():
             c_url_clean = c_url.strip()
-            # If the user has not replaced placeholder keys like <your_api_key>
-            if "<" in c_url_clean or "your_" in c_url_clean.lower() or "api_key" in c_url_clean.lower():
-                return False
-            cloudinary.config(cloudinary_url=c_url_clean, secure=True)
-            return bool(cloudinary.config().cloud_name)
-        if c_name and c_key and c_secret:
-            c_name_clean = c_name.strip()
-            if c_name_clean.lower() in ["root", "none", "your_cloud_name", ""]:
-                return False
-            if "<" in c_key or "<" in c_secret or "your_" in c_key.lower():
-                return False
-            cloudinary.config(cloud_name=c_name_clean, api_key=c_key.strip(), api_secret=c_secret.strip(), secure=True)
-            return bool(cloudinary.config().cloud_name)
+            if "<" not in c_url_clean and "your_" not in c_url_clean.lower() and "api_key" not in c_url_clean.lower():
+                cloudinary.config(cloudinary_url=c_url_clean, secure=True)
+                cfg = cloudinary.config()
+                return bool(cfg.cloud_name and cfg.api_key and cfg.api_secret and "<" not in str(cfg.api_key))
+
+        # Priority 3: Check existing global config
+        cfg = cloudinary.config()
+        if cfg.cloud_name and cfg.api_key and cfg.api_secret:
+            if "<" not in str(cfg.api_key) and "your_" not in str(cfg.api_key).lower():
+                return True
     except Exception as e:
         print(f"[Cloudinary] Configuration error: {e}")
     return False
@@ -1488,23 +1530,24 @@ def health_check():
 def cloud_diag():
     enabled = is_cloudinary_enabled()
     c_name = getattr(cloudinary.config(), "cloud_name", None) if CLOUDINARY_AVAILABLE else None
+    c_key = getattr(cloudinary.config(), "api_key", None) if CLOUDINARY_AVAILABLE else None
     res = {
         "cloudinary_enabled": enabled,
         "cloud_name": c_name,
+        "has_api_key": bool(os.environ.get("CLOUDINARY_API_KEY")),
+        "has_api_secret": bool(os.environ.get("CLOUDINARY_API_SECRET")),
         "has_c_url": bool(os.environ.get("CLOUDINARY_URL")),
+        "key_preview": (str(c_key)[:4] + "...") if c_key else None
     }
     if enabled:
         try:
             import io
-            test_bio = io.BytesIO(b'{"test": "ok"}')
+            test_bio = io.BytesIO(b'{"test": "ok", "app": "BeatSync"}')
             up = cloudinary.uploader.upload(test_bio, resource_type="raw", public_id="beatsync_test_ping.json", overwrite=True)
             res["test_upload"] = {
                 "status": "success",
                 "secure_url": up.get("secure_url")
             }
-            import urllib.request
-            with urllib.request.urlopen(up["secure_url"], timeout=5) as r:
-                res["test_read"] = r.read().decode()
         except Exception as e:
             res["test_upload_error"] = str(e)
             
