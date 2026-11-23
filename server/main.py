@@ -1560,4 +1560,16 @@ def cloud_diag():
                 res["backup_size_bytes"] = len(r.read())
         except Exception as e:
             res["backup_fetch_error"] = str(e)
+            # Create the initial backup now
+            created_url = backup_db_to_cloud()
+            if created_url:
+                res["backup_created"] = created_url
+                res["backup_fetch_status"] = 200
     return res
+
+@app.post("/api/cloud/backup")
+def trigger_backup():
+    if not is_cloudinary_enabled():
+        raise HTTPException(status_code=400, detail="Cloudinary is not enabled")
+    url = backup_db_to_cloud()
+    return {"status": "success", "backup_url": url}
